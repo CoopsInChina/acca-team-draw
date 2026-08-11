@@ -30,7 +30,28 @@ Everything else is worked out automatically:
   expected return (they alone sank the acca).
 - **Accumulated EBIT** chart = each team's running cumulative profit per round.
 
-## Updating each week
+## Updating each week — the easy way (editor)
+
+A local form-based editor writes `data.js` for you, so you never hand-edit it.
+
+```bash
+node stats/admin/serve.js
+```
+
+Then open **http://localhost:4599/stats/admin/**, pick the week (or "New week"),
+fill in each team's expected return, tick balls-of-steel, enter picks/odds/results,
+write the weekly highlight, and hit **Save to data.js**. The previous file is kept
+as `data.js.bak`. When you're happy:
+
+```bash
+git add -A && git commit -m "Week N results" && git push
+```
+
+The editor also loads from plain `file://` (double-click `stats/admin/index.html`),
+but there it can only **Download** / **Copy** the generated `data.js` — running the
+server is what lets it save in place.
+
+## Updating each week — by hand
 
 1. Open `data.js`, copy the last `{ week: N, … }` block, bump the week + date.
 2. Set `expectedReturn` for each team.

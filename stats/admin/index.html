@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acca Data Editor</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --gold:#ffd700; --bg-top:#1a2744; --bg-bot:#0d1117;
+  --card:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.12); --muted:#7a8aaa;
+  --win:#2ecc71; --loss:#e74c3c; --draw:#e0a800; --eu:#2f6fed; --asia:#e8641c;
+}
+body { background: radial-gradient(ellipse at top, var(--bg-top), var(--bg-bot) 70%) fixed;
+  font-family:'Segoe UI',Arial,sans-serif; color:#fff; min-height:100vh; -webkit-font-smoothing:antialiased; }
+.wrap { max-width: 940px; margin: 0 auto; padding: 22px 16px 120px; }
+
+header { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+header h1 { font-size:1.4rem; letter-spacing:3px; color:var(--gold); text-shadow:0 0 24px rgba(255,215,0,0.4); }
+.mode { font-size:0.65rem; letter-spacing:1px; text-transform:uppercase; font-weight:800; padding:5px 12px; border-radius:20px; border:1px solid var(--line); }
+.mode.server { color:var(--win); border-color:rgba(46,204,113,0.4); background:rgba(46,204,113,0.1); }
+.mode.file { color:var(--draw); border-color:rgba(224,168,0,0.4); background:rgba(224,168,0,0.1); }
+header .sub { width:100%; font-size:0.72rem; color:var(--muted); letter-spacing:1px; }
+header .sub a { color:var(--gold); }
+
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-top:16px; }
+.card h2 { font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+
+.grid { display:grid; gap:12px; }
+.row2 { grid-template-columns:1fr 1fr; }
+.row3 { grid-template-columns:1fr 1fr 1fr; }
+@media (max-width:640px){ .row2,.row3{ grid-template-columns:1fr; } }
+
+label { display:block; font-size:0.66rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+input, select, textarea {
+  width:100%; background:rgba(0,0,0,0.25); border:1px solid var(--line); border-radius:8px;
+  color:#fff; padding:9px 11px; font-size:0.9rem; font-family:inherit; }
+input:focus, select:focus, textarea:focus { outline:2px solid rgba(255,215,0,0.5); outline-offset:0; border-color:transparent; }
+textarea { resize:vertical; min-height:52px; line-height:1.4; }
+input[type=number]{ font-variant-numeric:tabular-nums; }
+.hint { font-size:0.68rem; color:var(--muted); margin-top:6px; }
+
+/* team subheader + player rows */
+.team-head { display:flex; align-items:center; gap:10px; margin:18px 0 8px; font-weight:800; letter-spacing:1px; }
+.team-head .chip { width:12px; height:12px; border-radius:3px; }
+.prow { display:grid; grid-template-columns: 34px 128px 1fr 84px 54px 116px; gap:10px; align-items:center; padding:7px 0; border-top:1px solid rgba(255,255,255,0.05); }
+.prow:first-of-type { border-top:none; }
+.prow .photo { width:34px; height:34px; border-radius:50%; object-fit:cover; background:#3a4a6a; border:2px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; overflow:hidden; position:relative; }
+.prow .photo img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.prow .pn { font-weight:700; font-size:0.85rem; }
+.prow .ck { display:flex; justify-content:center; }
+.prow input[type=checkbox]{ width:20px; height:20px; accent-color:var(--gold); cursor:pointer; }
+.res-win{ color:var(--win); } .res-loss{ color:var(--loss); } .res-draw{ color:var(--draw); } .res-pending{ color:var(--muted); }
+.colhead { display:grid; grid-template-columns: 34px 128px 1fr 84px 54px 116px; gap:10px; font-size:0.6rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding-bottom:4px; }
+@media (max-width:720px){ .prow, .colhead { grid-template-columns: 28px 1fr 70px 44px 96px; } .prow .pn{ display:none; } }
+
+/* action bar */
+.actionbar { position:fixed; left:0; right:0; bottom:0; background:rgba(13,17,23,0.96); border-top:1px solid var(--line);
+  padding:12px 16px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; z-index:50; backdrop-filter:blur(6px); }
+button { font-family:inherit; font-weight:800; letter-spacing:1px; border:none; border-radius:22px; padding:11px 20px; cursor:pointer; font-size:0.8rem; }
+.btn-apply { background:#2a3550; color:#cdd7ea; border:1px solid var(--line); }
+.btn-save { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#111; }
+.btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--line); }
+.btn-danger { background:transparent; color:var(--loss); border:1px solid rgba(231,76,60,0.4); }
+button:hover { filter:brightness(1.08); }
+button:disabled { opacity:0.4; cursor:default; }
+
+.toast { position:fixed; top:16px; left:50%; transform:translateX(-50%); padding:11px 20px; border-radius:10px; font-weight:700; font-size:0.85rem; z-index:100; opacity:0; transition:opacity .3s, top .3s; pointer-events:none; }
+.toast.show { opacity:1; top:24px; }
+.toast.ok { background:rgba(46,204,113,0.18); color:var(--win); border:1px solid rgba(46,204,113,0.5); }
+.toast.err { background:rgba(231,76,60,0.18); color:var(--loss); border:1px solid rgba(231,76,60,0.5); }
+
+details.preview { margin-top:16px; }
+details.preview summary { cursor:pointer; font-size:0.72rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted); }
+details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.72rem; color:#cdd7ea; }
+.dirty-dot { display:none; width:8px; height:8px; border-radius:50%; background:var(--gold); }
+.dirty .dirty-dot { display:inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>⚽ ACCA DATA EDITOR</h1>
+    <span class="mode" id="mode">…</span>
+    <span class="dirty-dot" id="dirty" title="unsaved changes"></span>
+    <div class="sub">Enter a week, apply it, then save. Live site → <a href="../index.html">stats page</a>. Data file: <b>stats/data.js</b></div>
+  </header>
+
+  <div class="card">
+    <h2>Week</h2>
+    <div class="grid row3">
+      <div>
+        <label for="wk-select">Editing</label>
+        <select id="wk-select"></select>
+      </div>
+      <div>
+        <label for="wk-num">Week #</label>
+        <input type="number" id="wk-num" min="1" step="1">
+      </div>
+      <div>
+        <label for="wk-date">Date</label>
+        <input type="date" id="wk-date">
+      </div>
+    </div>
+    <div class="grid row2" style="margin-top:12px;">
+      <div>
+        <label id="er-eu-lbl" for="er-europe">Expected return — Team EU (£)</label>
+        <input type="number" id="er-europe" min="0" step="0.01" placeholder="e.g. 124.30">
+      </div>
+      <div>
+        <label id="er-asia-lbl" for="er-asia">Expected return — Team Asia (£)</label>
+        <input type="number" id="er-asia" min="0" step="0.01" placeholder="e.g. 96.00">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label for="wk-highlight">Weekly highlight (headline shown at the top of the page)</label>
+      <textarea id="wk-highlight" placeholder="e.g. 🔥 Week 5: GloryHunter lands a 3.0 long bet…"></textarea>
+    </div>
+    <div class="hint">Expected return = the team's 5-fold acca potential payout. Total Won counts it only if all 5 win.</div>
+  </div>
+
+  <div class="card">
+    <h2>Picks — one per player</h2>
+    <div class="colhead">
+      <span></span><span>Player</span><span>Bet on</span><span>Odds (dec)</span><span>🔩 BoS</span><span>Result</span>
+    </div>
+    <div id="players"></div>
+    <div class="hint">Odds are decimal (e.g. 1.45). A draw counts as a loss. Long bet = odds ≥ <b id="long-note">2.00</b>.</div>
+  </div>
+
+  <details class="preview">
+    <summary>Preview generated data.js</summary>
+    <textarea id="preview" readonly spellcheck="false"></textarea>
+  </details>
+</div>
+
+<div class="actionbar">
+  <button class="btn-apply" id="btn-apply">✓ Apply week</button>
+  <button class="btn-save" id="btn-save">💾 Save to data.js</button>
+  <button class="btn-ghost" id="btn-download">⬇ Download</button>
+  <button class="btn-ghost" id="btn-copy">📋 Copy</button>
+  <button class="btn-danger" id="btn-delete">🗑 Delete week</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- current data -->
+<script src="../data.js"></script>
+<script>
+(function () {
+  if (!window.ACCA_DATA) { document.body.innerHTML = '<p style="padding:40px;color:#e74c3c">Could not load ../data.js</p>'; return; }
+  // Deep clone so we edit a working copy
+  const DATA = JSON.parse(JSON.stringify(window.ACCA_DATA));
+  DATA.weeks = DATA.weeks || [];
+  const TEAMS = DATA.teams;
+  const ORDER = TEAMS.flatMap(t => t.members);         // player render order
+  const LONG = DATA.longBetOdds || 2.00;
+  document.getElementById('long-note').textContent = Number(LONG).toFixed(2);
+
+  const isServer = (location.protocol === 'http:' || location.protocol === 'https:')
+                   && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+  const modeEl = document.getElementById('mode');
+  modeEl.textContent = isServer ? 'Server · saves to file' : 'File · download only';
+  modeEl.className = 'mode ' + (isServer ? 'server' : 'file');
+  document.getElementById('btn-save').style.display = isServer ? '' : 'none';
+
+  const $ = id => document.getElementById(id);
+  let dirty = false;
+  const markDirty = () => { dirty = true; document.body.classList.add('dirty'); };
+
+  // ---- Build player rows once ----------------------------------------------
+  const RESULTS = ['pending', 'win', 'loss', 'draw'];
+  const playersEl = $('players');
+  TEAMS.forEach(t => {
+    const head = document.createElement('div');
+    head.className = 'team-head';
+    head.style.color = t.color;
+    head.innerHTML = `<span class="chip" style="background:${t.color}"></span>${t.name}`;
+    playersEl.appendChild(head);
+    t.members.forEach(id => {
+      const p = DATA.players[id];
+      const row = document.createElement('div');
+      row.className = 'prow';
+      const img = p.img ? `<img src="../${p.img}" alt="" onerror="this.remove()">` : '';
+      row.innerHTML = `
+        <div class="photo">${img}<span>${p.init}</span></div>
+        <div class="pn">${p.name}</div>
+        <input type="text" id="bet-${id}" placeholder="e.g. Man City to win">
+        <input type="number" id="odds-${id}" min="1" step="0.01" placeholder="1.45">
+        <div class="ck"><input type="checkbox" id="bos-${id}"></div>
+        <select id="res-${id}">${RESULTS.map(r => `<option value="${r}">${r[0].toUpperCase()+r.slice(1)}</option>`).join('')}</select>`;
+      playersEl.appendChild(row);
+      row.querySelector(`#res-${id}`).addEventListener('change', e => paintResult(id, e.target.value));
+    });
+  });
+  function paintResult(id, val) {
+    const sel = $(`res-${id}`);
+    sel.className = 'res-' + val;
+  }
+
+  // ---- Week selector --------------------------------------------------------
+  const sel = $('wk-select');
+  function nextWeekNum() { return DATA.weeks.length ? Math.max(...DATA.weeks.map(w => w.week)) + 1 : 1; }
+  function renderOptions(selectedVal) {
+    const opts = ['<option value="__new">➕ New week (' + nextWeekNum() + ')</option>'];
+    DATA.weeks.slice().sort((a, b) => a.week - b.week).forEach(w => {
+      opts.push(`<option value="${w.week}">Week ${w.week}${w.date ? ' · ' + w.date : ''}${w.note ? ' · ' + w.note : ''}</option>`);
+    });
+    sel.innerHTML = opts.join('');
+    if (selectedVal != null) sel.value = String(selectedVal);
+  }
+
+  function loadNew() {
+    $('wk-num').value = nextWeekNum();
+    $('wk-date').value = new Date().toISOString().slice(0, 10);
+    $('er-europe').value = '';
+    $('er-asia').value = '';
+    $('wk-highlight').value = DATA.highlight || '';
+    ORDER.forEach(id => { $(`bet-${id}`).value=''; $(`odds-${id}`).value=''; $(`bos-${id}`).checked=false; const r=$(`res-${id}`); r.value='pending'; paintResult(id,'pending'); });
+    $('btn-delete').style.display = 'none';
+    loadedNote = null;
+  }
+  let loadedNote = null;
+  function loadWeek(n) {
+    const w = DATA.weeks.find(x => x.week === n);
+    if (!w) return loadNew();
+    $('wk-num').value = w.week;
+    $('wk-date').value = w.date || '';
+    $('er-europe').value = (w.expectedReturn && w.expectedReturn.europe != null) ? w.expectedReturn.europe : '';
+    $('er-asia').value   = (w.expectedReturn && w.expectedReturn.asia   != null) ? w.expectedReturn.asia   : '';
+    $('wk-highlight').value = DATA.highlight || '';
+    loadedNote = w.note || null;
+    ORDER.forEach(id => {
+      const b = (w.bets && w.bets[id]) || {};
+      $(`bet-${id}`).value  = b.betOn || '';
+      $(`odds-${id}`).value = (b.odds != null) ? b.odds : '';
+      $(`bos-${id}`).checked = !!b.ballsOfSteel;
+      const r = (b.result || 'pending'); $(`res-${id}`).value = r; paintResult(id, r);
+    });
+    $('btn-delete').style.display = '';
+  }
+  sel.addEventListener('change', () => {
+    if (sel.value === '__new') loadNew(); else loadWeek(+sel.value);
+  });
+
+  // Expected-return labels use real team names
+  $('er-eu-lbl').textContent   = 'Expected return — ' + TEAMS[0].name + ' (£)';
+  $('er-asia-lbl').textContent = 'Expected return — ' + TEAMS[1].name + ' (£)';
+  $('er-europe').id = 'er-' + TEAMS[0].id;   // ensure ids match team ids
+  $('er-asia').id   = 'er-' + TEAMS[1].id;
+
+  // ---- Read form → week object ---------------------------------------------
+  function readForm() {
+    const num = parseInt($('wk-num').value, 10);
+    if (!num || num < 1) { toast('Enter a valid week number', false); return null; }
+    const week = { week: num, date: $('wk-date').value || '', expectedReturn: {}, bets: {} };
+    if (loadedNote) week.note = loadedNote;
+    TEAMS.forEach(t => { week.expectedReturn[t.id] = parseFloat($('er-' + t.id).value) || 0; });
+    ORDER.forEach(id => {
+      week.bets[id] = {
+        betOn: $(`bet-${id}`).value.trim(),
+        odds: parseFloat($(`odds-${id}`).value) || 0,
+        ballsOfSteel: $(`bos-${id}`).checked,
+        result: $(`res-${id}`).value || 'pending',
+      };
+    });
+    return week;
+  }
+
+  function applyWeek() {
+    const week = readForm();
+    if (!week) return;
+    const i = DATA.weeks.findIndex(w => w.week === week.week);
+    if (i >= 0) DATA.weeks[i] = week; else DATA.weeks.push(week);
+    DATA.weeks.sort((a, b) => a.week - b.week);
+    DATA.highlight = $('wk-highlight').value.trim();
+    DATA.updated = 'Week ' + week.week + (week.date ? ' · ' + week.date : '');
+    renderOptions(week.week);
+    loadWeek(week.week);
+    refreshPreview();
+    markDirty();
+    toast('Week ' + week.week + ' applied — now Save', true);
+    return week;
+  }
+
+  function deleteWeek() {
+    const n = parseInt($('wk-num').value, 10);
+    const i = DATA.weeks.findIndex(w => w.week === n);
+    if (i < 0) { toast('That week is not saved yet', false); return; }
+    if (!confirm('Delete week ' + n + ' from the data?')) return;
+    DATA.weeks.splice(i, 1);
+    renderOptions('__new'); loadNew(); refreshPreview(); markDirty();
+    toast('Week ' + n + ' removed — Save to persist', true);
+  }
+
+  // ---- Serialize DATA → data.js text ---------------------------------------
+  const HEADER = `/* ============================================================================
+   ACCA ACCA ACCA — SEASON DATA   (managed by stats/admin/ — hand-editable too)
+   Each team plays a 5-fold accumulator per week; it pays only if all 5 win.
+   Odds are DECIMAL. A DRAW counts as a LOSS. Long bet = odds >= ${Number(LONG).toFixed(2)}.
+   ============================================================================ */
+
+`;
+  const q = s => JSON.stringify(s == null ? '' : String(s));
+  function serialize(d) {
+    let o = HEADER + 'window.ACCA_DATA = {\n\n';
+    o += `  season:  ${q(d.season)},\n`;
+    o += `  updated: ${q(d.updated)},\n\n`;
+    if (d.highlight != null && d.highlight !== '') o += `  highlight: ${q(d.highlight)},\n\n`;
+    o += `  stakePerTeamPerWeek: ${Number(d.stakePerTeamPerWeek)},\n`;
+    o += `  longBetOdds:         ${Number(d.longBetOdds)},\n`;
+    o += `  oddsDisplayDefault:  ${q(d.oddsDisplayDefault)},\n\n`;
+    o += '  teams: [\n';
+    d.teams.forEach(t => {
+      o += `    { id: ${q(t.id)}, name: ${q(t.name)}, short: ${q(t.short)}, color: ${q(t.color)},\n`;
+      if (t.img) o += `      img: ${q(t.img)},\n`;
+      o += `      members: [${t.members.map(q).join(', ')}] },\n`;
+    });
+    o += '  ],\n\n  players: {\n';
+    Object.keys(d.players).forEach(id => {
+      const p = d.players[id];
+      o += `    ${id}: { name: ${q(p.name)}, init: ${q(p.init)}${p.img ? ', img: ' + q(p.img) : ''} },\n`;
+    });
+    o += '  },\n\n  weeks: [\n';
+    d.weeks.slice().sort((a, b) => a.week - b.week).forEach(w => {
+      o += `    { week: ${w.week}, date: ${q(w.date)}${w.note ? ', note: ' + q(w.note) : ''},\n`;
+      o += `      expectedReturn: { ${d.teams.map(t => `${t.id}: ${Number((w.expectedReturn||{})[t.id]) || 0}`).join(', ')} },\n`;
+      o += '      bets: {\n';
+      d.teams.flatMap(t => t.members).forEach(id => {
+        const b = (w.bets || {})[id]; if (!b) return;
+        o += `        ${id}: { betOn: ${q(b.betOn)}, odds: ${Number(b.odds) || 0}, ballsOfSteel: ${!!b.ballsOfSteel}, result: ${q(b.result || 'pending')} },\n`;
+      });
+      o += '      }\n    },\n';
+    });
+    o += '  ],\n\n};\n';
+    return o;
+  }
+  function refreshPreview() { $('preview').value = serialize(DATA); }
+
+  // ---- Save / download / copy ----------------------------------------------
+  async function save() {
+    const text = serialize(DATA);
+    try {
+      const r = await fetch('/api/save-data', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text });
+      const j = await r.json();
+      if (j.ok) { dirty = false; document.body.classList.remove('dirty'); toast('Saved to stats/data.js ✓', true); }
+      else toast('Save failed: ' + j.error, false);
+    } catch (e) {
+      toast('No server — use Download instead', false);
+    }
+  }
+  function download() {
+    const blob = new Blob([serialize(DATA)], { type: 'application/javascript' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'data.js';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Downloaded data.js — move it into stats/', true);
+  }
+  async function copy() {
+    try { await navigator.clipboard.writeText(serialize(DATA)); toast('Copied data.js to clipboard', true); }
+    catch (e) { toast('Copy failed — use Download', false); }
+  }
+
+  // ---- Toast ---------------------------------------------------------------
+  let toastT;
+  function toast(msg, ok) {
+    const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (ok ? 'ok' : 'err');
+    clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast ' + (ok ? 'ok' : 'err'); }, 2600);
+  }
+
+  // ---- Wire up -------------------------------------------------------------
+  $('btn-apply').addEventListener('click', applyWeek);
+  $('btn-save').addEventListener('click', () => { applyWeek(); save(); });
+  $('btn-download').addEventListener('click', () => { applyWeek(); download(); });
+  $('btn-copy').addEventListener('click', () => { applyWeek(); copy(); });
+  $('btn-delete').addEventListener('click', deleteWeek);
+  [ 'wk-num','wk-date','wk-highlight','er-'+TEAMS[0].id,'er-'+TEAMS[1].id ].forEach(id => $(id).addEventListener('input', markDirty));
+  playersEl.addEventListener('input', markDirty);
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  renderOptions('__new');
+  loadNew();
+  refreshPreview();
+})();
+</script>
+</body>
+</html>
