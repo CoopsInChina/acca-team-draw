@@ -44,11 +44,10 @@ body {
 
 /* ── Pitch wrapper ── */
 #pitch-wrap {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  top: 65px;
+  position: absolute; /* left and top set entirely by JS */
 }
+
+/* ── Button pinned by JS top; left centering via CSS ── */
 
 /* ── The actual pitch ── */
 #pitch {
@@ -117,6 +116,8 @@ body {
 }
 
 .avatar {
+  position: relative;
+  overflow: hidden;
   width: 46px;
   height: 46px;
   border-radius: 50%;
@@ -136,6 +137,15 @@ body {
     border-color 0.5s ease,
     box-shadow 0.3s ease;
   letter-spacing: 0.5px;
+}
+.avatar .ini { position: relative; z-index: 1; }
+.avatar img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
 }
 
 .pname {
@@ -342,23 +352,33 @@ function layout() {
 
   pitch.style.width  = pitchW + 'px';
   pitch.style.height = pitchH + 'px';
-  pitchWrap.style.top  = pitchTop + 'px';
+  // set pitch-wrap position directly (no CSS transform involved)
   pitchWrap.style.left = pitchLeft + 'px';
+  pitchWrap.style.top  = pitchTop + 'px';
 
-  // Button below pitch
-  const btnTop = pitchTop + pitchH + 18;
+  // Layout order below pitch: dugout label → row1 → row2 → button
+  // Button pinned near bottom; players fill the gap between pitch and button
+  const btnH    = 52;
+  const btnBot  = 18; // gap from viewport bottom
+  const btnTop  = vh - btnH - btnBot;
   btn.style.top = btnTop + 'px';
 
-  // Dugout label
-  const dugTop = btnTop + 52;
-  dugoutLbl.style.top = dugTop + 'px';
+  // Two player rows fill the space between pitch and button
+  const gapTop    = pitchTop + pitchH + 10;
+  const gapBot    = btnTop - 10;
+  const gapH      = gapBot - gapTop;
+  const rowSpan   = 80;  // px between row centres
+  const rowBlock  = rowSpan; // two rows total height
+  const midGap    = gapTop + gapH / 2;
+  const rowY1     = midGap - rowBlock / 2;
+  const rowY2     = rowY1 + rowSpan;
 
-  // Dugout player start positions: 2 rows of 5 below the dugout label
-  const rowY1 = dugTop + 20;
-  const rowY2 = rowY1 + 82;
+  // Dugout label just above row1
+  dugoutLbl.style.top = (rowY1 - 22) + 'px';
+
   const totalW = pitchW;
   const startX = pitchLeft;
-  const step = totalW / 5;
+  const step   = totalW / 5;
 
   return { pitchLeft, pitchTop, pitchW, pitchH, rowY1, rowY2, startX, step };
 }
@@ -385,7 +405,7 @@ function createPlayers(lyt) {
 
     el.innerHTML = `
       <div class="pc">
-        <div class="avatar" id="av-${p.id}">${p.init}</div>
+        <div class="avatar" id="av-${p.id}"><img src="stats/assets/players/${p.id}.png" alt="" onerror="this.remove()"><span class="ini">${p.init}</span></div>
         <div class="pname">${p.name}</div>
         <div class="palias">${p.alias}</div>
         <div class="pos-tag" id="pos-${p.id}"></div>

@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acca Acca Acca — Season Stats</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold: #ffd700;
+  --bg-top: #1a2744;
+  --bg-bot: #0d1117;
+  --card: rgba(255,255,255,0.04);
+  --card-line: rgba(255,255,255,0.10);
+  --muted: #7a8aaa;
+  --win: #2ecc71;
+  --loss: #e74c3c;
+  --draw: #e0a800;
+  --eu: #2f6fed;
+  --asia: #e8641c;
+}
+
+body {
+  background: radial-gradient(ellipse at top, var(--bg-top) 0%, var(--bg-bot) 70%) fixed;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh; color: #fff; -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1100px; margin: 0 auto; padding: 22px 16px 80px; }
+
+/* ── Header ── */
+header { text-align: center; margin-bottom: 6px; }
+header h1 {
+  font-size: clamp(1.4rem, 4vw, 2.4rem); letter-spacing: 4px; color: var(--gold);
+  text-shadow: 0 0 30px rgba(255,215,0,0.5), 0 2px 4px rgba(0,0,0,0.8);
+}
+header .sub { font-size: 0.72rem; letter-spacing: 3px; color: var(--muted); margin-top: 4px; text-transform: uppercase; }
+.meta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; align-items: center; margin-top: 12px; font-size: 0.75rem; color: var(--muted); }
+.meta b { color: #cdd7ea; font-weight: 700; }
+.meta a { color: var(--gold); text-decoration: none; }
+.meta a:hover { text-decoration: underline; }
+
+.odds-toggle { display: inline-flex; border: 1px solid var(--card-line); border-radius: 20px; overflow: hidden; }
+.odds-toggle button { background: transparent; color: var(--muted); border: none; cursor: pointer; font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; padding: 5px 12px; font-weight: 700; }
+.odds-toggle button.active { background: var(--gold); color: #111; }
+
+.section-title { font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin: 34px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--card-line); display: flex; align-items: center; gap: 8px; }
+.demo-flag { display: inline-block; background: rgba(224,168,0,0.15); color: var(--draw); border: 1px solid rgba(224,168,0,0.35); border-radius: 20px; padding: 5px 14px; font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 12px; }
+
+/* ── Head to head ── */
+.h2h { background: var(--card); border: 1px solid var(--card-line); border-radius: 16px; overflow: hidden; }
+.h2h-head { display: grid; grid-template-columns: 1fr 90px 1fr; align-items: center; padding: 16px 18px; gap: 10px; }
+.h2h-team { font-size: clamp(0.95rem,2.5vw,1.3rem); font-weight: 900; letter-spacing: 1px; }
+.h2h-team.eu { color: var(--eu); text-align: right; }
+.h2h-team.asia { color: var(--asia); text-align: left; }
+.h2h-vs { text-align: center; font-size: 0.7rem; letter-spacing: 2px; color: var(--muted); }
+.h2h-vs .lead { display:block; font-size: 1.1rem; font-weight: 900; color: var(--gold); margin-top: 2px; }
+.h2h-row { display: grid; grid-template-columns: 1fr 150px 1fr; align-items: center; padding: 11px 18px; border-top: 1px solid rgba(255,255,255,0.06); font-variant-numeric: tabular-nums; }
+.h2h-row .v { font-size: 1.05rem; font-weight: 800; }
+.h2h-row .v.eu { text-align: right; } .h2h-row .v.asia { text-align: left; }
+.h2h-row .v.winner { color: var(--gold); }
+.h2h-row .lbl { text-align: center; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.h2h-row .v.pos { color: var(--win); } .h2h-row .v.neg { color: var(--loss); }
+
+/* ── Player tables ── */
+.team-block { margin-bottom: 22px; }
+.team-block h3 { font-size: 1rem; letter-spacing: 1px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.team-block h3 .chip { width: 12px; height: 12px; border-radius: 3px; }
+.table-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--card-line); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 620px; }
+thead th { background: rgba(255,255,255,0.05); color: #cdd7ea; text-align: center; font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; padding: 11px 8px; white-space: nowrap; }
+thead th.left { text-align: left; }
+tbody td { padding: 10px 8px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+td.left { text-align: left; }
+tr.avg-row td { border-top: 2px solid var(--card-line); font-weight: 800; color: var(--gold); background: rgba(255,215,0,0.04); }
+tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 0.72rem; }
+.player-cell { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; flex: 0 0 34px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: #fff; letter-spacing: .3px; border: 2px solid rgba(255,255,255,0.25); }
+.pn { font-weight: 700; }
+.streak-w { color: var(--win); font-weight: 800; } .streak-l { color: var(--loss); font-weight: 800; }
+.dim { color: var(--muted); }
+.pct-bar { height: 5px; border-radius: 4px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 4px; }
+.pct-bar > span { display: block; height: 100%; }
+
+/* ── EBIT chart ── */
+.chart-card { background: var(--card); border: 1px solid var(--card-line); border-radius: 14px; padding: 16px; }
+.chart-legend { display: flex; gap: 18px; justify-content: center; margin-top: 8px; font-size: 0.72rem; color: var(--muted); }
+.chart-legend .k { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend .k i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.ebit-svg { width: 100%; height: auto; display: block; }
+.ebit-svg text { fill: var(--muted); font-size: 10px; font-family: inherit; }
+.ebit-svg .zero { stroke: rgba(255,255,255,0.25); stroke-dasharray: 3 3; }
+.ebit-svg .grid { stroke: rgba(255,255,255,0.06); }
+
+/* ── Mini count tables ── */
+.mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.mini { background: var(--card); border: 1px solid var(--card-line); border-radius: 12px; overflow: hidden; }
+.mini .mh { padding: 11px 14px; font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 800; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--card-line); }
+.mini .mh .tag { margin-left: auto; font-size: 0.6rem; color: var(--muted); letter-spacing: 1px; }
+.mini .mrow { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.04); }
+.mini .mrow:first-of-type { border-top: none; }
+.mini-av { width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; color: #fff; border: 1.5px solid rgba(255,255,255,0.22); }
+.mini .grow { flex: 1; font-weight: 700; }
+.mini .mv { font-weight: 800; font-variant-numeric: tabular-nums; }
+.mini .mv2 { color: var(--muted); font-size: 0.72rem; margin-left: 6px; }
+.mini .empty { padding: 14px; color: var(--muted); font-size: 0.8rem; text-align: center; }
+
+/* ── Week by week ── */
+.week { background: var(--card); border: 1px solid var(--card-line); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.week > summary { list-style: none; cursor: pointer; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.week > summary::-webkit-details-marker { display: none; }
+.week summary .wl { font-weight: 800; letter-spacing: 1px; }
+.week summary .wr { font-size: 0.72rem; color: var(--muted); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.week summary .won-eu { color: var(--eu); } .week summary .won-asia { color: var(--asia); }
+.week summary .landed { color: var(--win); font-weight: 800; }
+.week summary .chev { color: var(--muted); transition: transform .2s; }
+.week[open] summary .chev { transform: rotate(90deg); }
+.bet-row { display: grid; grid-template-columns: 160px 1fr 66px 58px; gap: 10px; align-items: center; padding: 9px 16px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.82rem; }
+@media (max-width: 560px){ .bet-row { grid-template-columns: 120px 1fr 50px; } .bet-row .bet-odds { display: none; } }
+.bet-row .bp { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.bet-row .bp .mini-av { width: 24px; height: 24px; font-size: 8px; flex: 0 0 24px; }
+.bet-sel { color: #cdd7ea; }
+.bet-sel .bos { color: var(--gold); font-size: 0.68rem; font-weight: 800; margin-left: 4px; }
+.bet-sel .long { color: var(--eu); font-size: 0.62rem; font-weight: 800; margin-left: 4px; letter-spacing: .5px; }
+.bet-odds { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.res { text-align: center; font-size: 0.64rem; font-weight: 900; letter-spacing: 1px; padding: 3px 0; border-radius: 5px; }
+.res.win { background: rgba(46,204,113,0.18); color: var(--win); }
+.res.loss { background: rgba(231,76,60,0.18); color: var(--loss); }
+.res.draw { background: rgba(224,168,0,0.18); color: var(--draw); }
+.res.pending { background: rgba(255,255,255,0.08); color: var(--muted); }
+
+.foot { text-align: center; color: var(--muted); font-size: 0.7rem; margin-top: 40px; line-height: 1.8; }
+.foot b { color: #cdd7ea; }
+
+/* ── Avatar photos (fall back to initials) ── */
+.avatar, .mini-av { position: relative; overflow: hidden; }
+.avatar .ini, .mini-av .ini { position: relative; z-index: 1; }
+.avatar img, .mini-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; }
+
+/* ── Team pictures in Head to Head ── */
+.h2h-team { display: flex; align-items: center; gap: 12px; }
+.h2h-team.eu { justify-content: flex-end; }
+.h2h-team.asia { justify-content: flex-start; }
+.team-pic { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: 0 0 46px; border: 2px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.05); }
+@media (max-width: 520px){ .team-pic { width: 36px; height: 36px; flex-basis: 36px; } .h2h-team { gap: 8px; } }
+
+/* ── Weekly highlight banner ── */
+.highlight-banner { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.35); background: linear-gradient(90deg, rgba(255,215,0,0.14), rgba(255,215,0,0.04)); }
+.highlight-banner .hl-ic { font-size: 1.2rem; line-height: 1; }
+.highlight-banner .hl-txt { font-size: 0.95rem; font-weight: 600; color: #ffe9a6; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>⚽ ACCA ACCA ACCA</h1>
+    <div class="sub">Season Stats</div>
+    <div class="meta">
+      <span>Season <b id="m-season">—</b></span>
+      <span>Updated <b id="m-updated">—</b></span>
+      <span class="odds-toggle" id="odds-toggle">
+        <button data-mode="decimal">Decimal</button>
+        <button data-mode="fractional">Fractional</button>
+      </span>
+      <span><a href="../index.html">← Team Draw</a></span>
+    </div>
+    <div id="demo-flag"></div>
+  </header>
+
+  <div id="highlight"></div>
+
+  <div class="section-title">⚔️ Head to Head</div>
+  <div class="h2h" id="h2h"></div>
+
+  <div class="section-title">📈 Accumulated EBIT</div>
+  <div class="chart-card">
+    <div id="ebit"></div>
+    <div class="chart-legend" id="ebit-legend"></div>
+  </div>
+
+  <div class="section-title">📊 Player Stats</div>
+  <div id="team-tables"></div>
+
+  <div class="section-title">🔩 Balls of Steel &amp; Naughty Step</div>
+  <div class="mini-grid" id="bos-grid"></div>
+
+  <div class="section-title">🎯 Long Bets</div>
+  <div class="mini-grid" id="long-grid"></div>
+
+  <div class="section-title">😳 Guilt Club</div>
+  <div class="mini-grid" id="guilt-grid"></div>
+
+  <div class="section-title">🗓️ Week by Week</div>
+  <div id="weeks"></div>
+
+  <div class="foot">
+    Odds stored as <b>decimal</b>; toggle the display above · a <b>draw counts as a loss</b>.<br>
+    Acca lands only if all 5 win · Total Won = expected returns on winning weeks ·
+    Staked = weeks × <b id="f-stake">£12.50</b>/team · Long bet = odds ≥ <b id="f-long">2.00</b> ·
+    Guilt = sole non-winner charged the week's expected return.
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  const D = window.ACCA_DATA;
+  if (!D) { document.body.innerHTML = '<p style="padding:40px;color:#e74c3c">Could not load data.js</p>'; return; }
+
+  const STAKE = D.stakePerTeamPerWeek || 12.50;
+  const LONG  = D.longBetOdds || 2.00;
+
+  // ── Odds display helpers ────────────────────────────────────────────────────
+  let oddsMode = D.oddsDisplayDefault || 'decimal';
+  try { const s = localStorage.getItem('accaOddsMode'); if (s) oddsMode = s; } catch (e) {}
+
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function decToFrac(dec) {
+    if (dec == null || isNaN(dec)) return '—';
+    const f = dec - 1;
+    if (Math.abs(f - 1) < 1e-9) return 'evens';
+    if (f <= 0) return dec.toFixed(2);
+    let bestN = 1, bestD = 1, err = Infinity;
+    for (let d = 1; d <= 50; d++) {
+      const n = Math.round(f * d);
+      if (n < 1) continue;
+      const e = Math.abs(f - n / d);
+      if (e < err - 1e-12) { err = e; bestN = n; bestD = d; }
+    }
+    const g = gcd(bestN, bestD);
+    return (bestN / g) + '/' + (bestD / g);
+  }
+  function fmtOdds(dec) {
+    if (dec == null || isNaN(dec)) return '—';
+    return oddsMode === 'fractional' ? decToFrac(dec) : Number(dec).toFixed(2);
+  }
+  function money(n) {
+    const s = Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (n < 0 ? '−£' : '£') + s;
+  }
+  const settled = b => b && (b.result || 'pending').toLowerCase() !== 'pending';
+  const isWin   = b => b && (b.result || '').toLowerCase() === 'win';
+
+  // ── Per-player aggregation ──────────────────────────────────────────────────
+  const players = {};
+  Object.keys(D.players).forEach(id => {
+    players[id] = { id, ...D.players[id],
+      correct: 0, total: 0, winOdds: [], loseOdds: [], allOdds: [], seq: [],
+      winStreak: 0, loseStreak: 0,
+      bosEntries: 0, bosWon: 0, naughty: 0, longWon: 0, longFail: 0,
+      guiltGBP: 0, guiltEntries: 0 };
+  });
+
+  D.weeks.forEach(w => {
+    Object.keys(w.bets).forEach(id => {
+      const p = players[id]; if (!p) return;
+      const b = w.bets[id];
+      if (!settled(b)) return;
+      const win = isWin(b);
+      p.total++;
+      p.allOdds.push(b.odds);
+      if (win) { p.correct++; p.winOdds.push(b.odds); } else { p.loseOdds.push(b.odds); }
+      p.seq.push(win);
+      if (b.ballsOfSteel) { p.bosEntries++; if (win) p.bosWon++; else p.naughty++; }
+      if (b.odds >= LONG) { if (win) p.longWon++; else p.longFail++; }
+    });
+  });
+
+  const mean = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+  Object.values(players).forEach(p => {
+    p.pct = p.total ? Math.round((p.correct / p.total) * 100) : 0;
+    p.aveWin = mean(p.winOdds); p.aveLose = mean(p.loseOdds); p.aveAll = mean(p.allOdds);
+    let ws = 0, ls = 0;
+    for (let i = p.seq.length - 1; i >= 0; i--) { if (p.seq[i]) ws++; else break; }
+    for (let i = p.seq.length - 1; i >= 0; i--) { if (!p.seq[i]) ls++; else break; }
+    p.winStreak = ws; p.loseStreak = ls;
+  });
+
+  const teamOf = {};
+  D.teams.forEach(t => t.members.forEach(m => teamOf[m] = t));
+
+  // week is "settled" for a team when every member has a settled bet
+  const teamWeekSettled = (t, w) => t.members.every(id => settled(w.bets[id]));
+  const teamAccaLands   = (t, w) => t.members.every(id => isWin(w.bets[id]));
+
+  // avatar: player photo if present, else initials (photo falls back to initials on load error)
+  function avatarHTML(o, cls, color) {
+    const im = o.img ? `<img src="${o.img}" alt="" loading="lazy" onerror="this.remove()">` : '';
+    return `<div class="${cls}" style="background:${color}">${im}<span class="ini">${o.init || ''}</span></div>`;
+  }
+  const teamPic = t => t.img ? `<img class="team-pic" src="${t.img}" alt="" onerror="this.style.display='none'">` : '';
+
+  // ── Guilt Club: sole non-winner charged that week's expected return ─────────
+  D.teams.forEach(t => {
+    D.weeks.forEach(w => {
+      if (!teamWeekSettled(t, w)) return;
+      const nonWinners = t.members.filter(id => !isWin(w.bets[id]));
+      if (nonWinners.length === 1) {
+        const p = players[nonWinners[0]];
+        const er = (w.expectedReturn && w.expectedReturn[t.id]) || 0;
+        p.guiltGBP += er; p.guiltEntries++;
+      }
+    });
+  });
+
+  // ── Team aggregates ─────────────────────────────────────────────────────────
+  const teamStats = {};
+  D.teams.forEach(t => {
+    const mem = t.members.map(id => players[id]).filter(Boolean);
+    const weeksPlayed = D.weeks.filter(w => teamWeekSettled(t, w)).length;
+    const totalWins = mem.reduce((s, p) => s + p.correct, 0);
+    let teamScore = 0, won = 0;
+    D.weeks.forEach(w => {
+      if (teamWeekSettled(t, w) && teamAccaLands(t, w)) {
+        teamScore++;
+        won += (w.expectedReturn && w.expectedReturn[t.id]) || 0;
+      }
+    });
+    const staked = weeksPlayed * STAKE;
+    const profit = won - staked;
+    const roi = staked ? (profit / staked) * 100 : 0;
+    const avg = key => { const v = mem.map(p => p[key]).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+    teamStats[t.id] = { team: t, mem, weeksPlayed, totalWins, teamScore, staked, won, profit, roi,
+      avgPct: avg('pct'), avgWin: avg('aveWin'), avgLose: avg('aveLose'), avgAll: avg('aveAll') };
+  });
+
+  // ── Header meta ─────────────────────────────────────────────────────────────
+  document.getElementById('m-season').textContent = D.season || '—';
+  document.getElementById('m-updated').textContent = D.updated || '—';
+  document.getElementById('f-stake').textContent = money(STAKE);
+  document.getElementById('f-long').textContent = Number(LONG).toFixed(2);
+  if (D.highlight)
+    document.getElementById('highlight').innerHTML =
+      `<div class="highlight-banner"><span class="hl-ic">📣</span><span class="hl-txt">${D.highlight}</span></div>`;
+  const hasPlayed = D.weeks.some(w => Object.values(w.bets || {}).some(settled));
+  if (D.weeks.some(w => (w.note || '').toUpperCase() === 'DEMO'))
+    document.getElementById('demo-flag').innerHTML =
+      '<span class="demo-flag">⚠ Showing demo data — replace in data.js</span>';
+  else if (!hasPlayed)
+    document.getElementById('demo-flag').innerHTML =
+      '<span class="demo-flag">🕐 Week 0 — pre-season, no bets placed yet</span>';
+
+  const [tEu, tAsia] = D.teams;
+  const sEu = teamStats[tEu.id], sAsia = teamStats[tAsia.id];
+
+  // ── Head to head ────────────────────────────────────────────────────────────
+  function h2hRow(label, euVal, asiaVal, euRaw, asiaRaw, sign) {
+    let euCls = '', asiaCls = '';
+    if (euRaw > asiaRaw) euCls = 'winner'; else if (asiaRaw > euRaw) asiaCls = 'winner';
+    if (sign) { euCls += (euRaw >= 0 ? ' pos' : ' neg'); asiaCls += (asiaRaw >= 0 ? ' pos' : ' neg'); }
+    return `<div class="h2h-row">
+      <div class="v eu ${euCls}">${euVal}</div>
+      <div class="lbl">${label}</div>
+      <div class="v asia ${asiaCls}">${asiaVal}</div></div>`;
+  }
+  document.getElementById('h2h').innerHTML = `
+    <div class="h2h-head">
+      <div class="h2h-team eu"><span class="tn">${tEu.name}</span>${teamPic(tEu)}</div>
+      <div class="h2h-vs">VS</div>
+      <div class="h2h-team asia">${teamPic(tAsia)}<span class="tn">${tAsia.name}</span></div>
+    </div>
+    ${h2hRow('Individual Wins', sEu.totalWins, sAsia.totalWins, sEu.totalWins, sAsia.totalWins)}
+    ${h2hRow('Team Score', sEu.teamScore, sAsia.teamScore, sEu.teamScore, sAsia.teamScore)}
+    ${h2hRow('Total Staked', money(sEu.staked), money(sAsia.staked), 0, 0)}
+    ${h2hRow('Total Won', money(sEu.won), money(sAsia.won), sEu.won, sAsia.won)}
+    ${h2hRow('Profit', money(sEu.profit), money(sAsia.profit), sEu.profit, sAsia.profit, true)}
+    ${h2hRow('ROI', sEu.roi.toFixed(0) + '%', sAsia.roi.toFixed(0) + '%', sEu.roi, sAsia.roi, true)}`;
+
+  // ── Accumulated EBIT chart ──────────────────────────────────────────────────
+  function ebitSeries(t) {
+    let cum = 0; const pts = [];
+    D.weeks.forEach(w => {
+      if (!teamWeekSettled(t, w)) return;
+      const won = teamAccaLands(t, w) ? ((w.expectedReturn && w.expectedReturn[t.id]) || 0) : 0;
+      cum += won - STAKE;
+      pts.push({ week: w.week, val: cum });
+    });
+    return pts;
+  }
+  (function drawEbit() {
+    const a = ebitSeries(tEu), b = ebitSeries(tAsia);
+    const box = document.getElementById('ebit');
+    if (!a.length && !b.length) { box.innerHTML = '<div class="mini empty">No settled weeks yet</div>'; return; }
+    const vals = a.concat(b).map(p => p.val).concat([0]);
+    const weeks = a.concat(b).map(p => p.week);
+    let minY = Math.min(...vals), maxY = Math.max(...vals);
+    if (minY === maxY) { minY -= 1; maxY += 1; }
+    const padY = (maxY - minY) * 0.12; minY -= padY; maxY += padY;
+    const minW = Math.min(...weeks), maxW = Math.max(...weeks);
+    const W = 720, H = 260, pL = 52, pR = 14, pT = 14, pB = 26;
+    const x = w => pL + (maxW === minW ? 0.5 : (w - minW) / (maxW - minW)) * (W - pL - pR);
+    const y = v => pT + (maxY - v) / (maxY - minY) * (H - pT - pB);
+    const path = (pts, col) => {
+      if (!pts.length) return '';
+      const d = pts.map(p => x(p.week).toFixed(1) + ',' + y(p.val).toFixed(1)).join(' ');
+      const dots = pts.map(p => `<circle cx="${x(p.week).toFixed(1)}" cy="${y(p.val).toFixed(1)}" r="2.6" fill="${col}"/>`).join('');
+      return `<polyline points="${d}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>${dots}`;
+    };
+    const ticks = [maxY, (maxY + minY) / 2, 0, minY].filter((v, i, arr) => arr.indexOf(v) === i && v <= maxY && v >= minY);
+    const yLabels = ticks.map(v => `<line class="grid" x1="${pL}" y1="${y(v).toFixed(1)}" x2="${W - pR}" y2="${y(v).toFixed(1)}"/><text x="${pL - 6}" y="${(y(v) + 3).toFixed(1)}" text-anchor="end">${money(v).replace('.00','')}</text>`).join('');
+    const zero = (0 >= minY && 0 <= maxY) ? `<line class="zero" x1="${pL}" y1="${y(0).toFixed(1)}" x2="${W - pR}" y2="${y(0).toFixed(1)}"/>` : '';
+    let xLabels = '';
+    a.forEach(p => { xLabels += `<text x="${x(p.week).toFixed(1)}" y="${H - 8}" text-anchor="middle">${p.week}</text>`; });
+    box.innerHTML = `<svg class="ebit-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${yLabels}${zero}${path(a, tEu.color)}${path(b, tAsia.color)}</svg>`;
+    document.getElementById('ebit-legend').innerHTML =
+      `<span class="k"><i style="background:${tEu.color}"></i>${tEu.name} — ${money(sEu.profit)}</span>
+       <span class="k"><i style="background:${tAsia.color}"></i>${tAsia.name} — ${money(sAsia.profit)}</span>`;
+  })();
+
+  // ── Player tables ───────────────────────────────────────────────────────────
+  const tablesEl = document.getElementById('team-tables');
+  function fmtAve(v) { return v == null ? '—' : fmtOdds(v); }
+  function pctColor(p) { return p >= 60 ? 'var(--win)' : p >= 40 ? 'var(--draw)' : 'var(--loss)'; }
+  function buildTeamTable_(t) {
+    const s = teamStats[t.id];
+    const rows = s.mem.slice().sort((a, b) => b.correct - a.correct || b.pct - a.pct).map(p => `
+      <tr>
+        <td class="left"><div class="player-cell">${avatarHTML(p, 'avatar', t.color)}<div class="pn">${p.name}</div></div></td>
+        <td>${p.correct}</td>
+        <td>${p.pct}%<div class="pct-bar"><span style="width:${p.pct}%;background:${pctColor(p.pct)}"></span></div></td>
+        <td>${fmtAve(p.aveWin)}</td>
+        <td>${fmtAve(p.aveLose)}</td>
+        <td>${fmtAve(p.aveAll)}</td>
+        <td>${p.winStreak ? '<span class="streak-w">' + p.winStreak + '</span>' : '<span class="dim">0</span>'}</td>
+        <td>${p.loseStreak ? '<span class="streak-l">' + p.loseStreak + '</span>' : '<span class="dim">0</span>'}</td>
+      </tr>`).join('');
+    return `
+      <div class="team-block">
+        <h3><span class="chip" style="background:${t.color}"></span>${t.name}</h3>
+        <div class="table-scroll"><table>
+          <thead><tr>
+            <th class="left">Player</th><th>Correct</th><th>% Correct</th>
+            <th>Ave Win Odds</th><th>Ave Lose Odds</th><th>Ave All Odds</th>
+            <th>Win Streak</th><th>Lose Streak</th>
+          </tr></thead>
+          <tbody>${rows}
+            <tr class="avg-row">
+              <td class="left">Team Average</td><td>${s.totalWins}</td>
+              <td>${s.avgPct == null ? '—' : Math.round(s.avgPct) + '%'}</td>
+              <td>${fmtAve(s.avgWin)}</td><td>${fmtAve(s.avgLose)}</td><td>${fmtAve(s.avgAll)}</td>
+              <td colspan="2"></td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>`;
+  }
+
+  // ── Mini count tables ───────────────────────────────────────────────────────
+  function miniList(headHTML, tagHTML, rows) {
+    const body = rows.length ? rows.map(r => `
+      <div class="mrow">
+        ${avatarHTML(r, 'mini-av', r.color)}
+        <div class="grow">${r.name}</div>
+        <div class="mv">${r.main}${r.sub ? '<span class="mv2">' + r.sub + '</span>' : ''}</div>
+      </div>`).join('') : '<div class="empty">No entries yet</div>';
+    return `<div class="mini"><div class="mh">${headHTML}${tagHTML ? '<span class="tag">' + tagHTML + '</span>' : ''}</div>${body}</div>`;
+  }
+  const rowsBy = (valFn, subFn) => Object.values(players)
+    .map(p => ({ p, v: valFn(p) })).filter(o => o.v > 0)
+    .sort((x, y) => y.v - x.v)
+    .map(o => ({ name: o.p.name, init: o.p.init, img: o.p.img, color: (teamOf[o.p.id] || {}).color || '#3a4a6a', main: o.v, sub: subFn ? subFn(o.p) : '' }));
+
+  document.getElementById('bos-grid').innerHTML =
+    miniList('🔩 Balls of Steel', '# won', rowsBy(p => p.bosWon)) +
+    miniList('⚠️ Mind the Naughty Step', 'BoS losses', rowsBy(p => p.naughty));
+
+  document.getElementById('long-grid').innerHTML =
+    miniList('✅ Successful Long Bets', '≥ ' + Number(LONG).toFixed(2), rowsBy(p => p.longWon)) +
+    miniList('❌ Failed Long Bets', '≥ ' + Number(LONG).toFixed(2), rowsBy(p => p.longFail));
+
+  function guiltCard(t) {
+    const rows = t.members.map(id => players[id])
+      .filter(p => p.guiltEntries > 0)
+      .sort((a, b) => b.guiltGBP - a.guiltGBP)
+      .map(p => ({ name: p.name, init: p.init, img: p.img, color: t.color, main: money(p.guiltGBP), sub: p.guiltEntries + (p.guiltEntries === 1 ? ' wk' : ' wks') }));
+    return miniList('😳 ' + t.name + ' Guilt Club', '£ cost', rows);
+  }
+  document.getElementById('guilt-grid').innerHTML = D.teams.map(guiltCard).join('');
+
+  // ── Week by week ────────────────────────────────────────────────────────────
+  const weeksEl = document.getElementById('weeks');
+  function renderWeeks() {
+    weeksEl.innerHTML = '';
+    if (!D.weeks.length) {
+      weeksEl.innerHTML = '<div class="mini"><div class="empty">No weeks played yet — add Week 1 to <b>data.js</b> to get started.</div></div>';
+      return;
+    }
+    D.weeks.slice().reverse().forEach((w, idx) => {
+      const det = document.createElement('details');
+      det.className = 'week';
+      if (idx === 0) det.open = true;
+      let rows = '';
+      Object.keys(w.bets).forEach(id => {
+        const p = players[id]; if (!p) return;
+        const b = w.bets[id]; const t = teamOf[id];
+        const res = (b.result || 'pending').toLowerCase();
+        const longTag = (b.odds >= LONG) ? '<span class="long">LONG</span>' : '';
+        rows += `
+          <div class="bet-row">
+            <div class="bp">${avatarHTML(p, 'mini-av', t ? t.color : '#3a4a6a')}${p.name}</div>
+            <div class="bet-sel">${b.betOn || '—'}${b.ballsOfSteel ? '<span class="bos">🔩 BOS</span>' : ''}${longTag}</div>
+            <div class="bet-odds">${fmtOdds(b.odds)}</div>
+            <div class="res ${res}">${res.toUpperCase()}</div>
+          </div>`;
+      });
+      const erEu = (w.expectedReturn && w.expectedReturn[tEu.id]) || 0;
+      const erAs = (w.expectedReturn && w.expectedReturn[tAsia.id]) || 0;
+      const euLanded = teamWeekSettled(tEu, w) && teamAccaLands(tEu, w);
+      const asLanded = teamWeekSettled(tAsia, w) && teamAccaLands(tAsia, w);
+      det.innerHTML = `
+        <summary>
+          <span class="wl">Week ${w.week} <span class="dim" style="font-weight:400">${w.date || ''}</span></span>
+          <span class="wr">
+            <span class="won-eu">${tEu.short} ${money(erEu)}${euLanded ? ' <span class="landed">✓ WON</span>' : ''}</span>
+            <span class="won-asia">${tAsia.short} ${money(erAs)}${asLanded ? ' <span class="landed">✓ WON</span>' : ''}</span>
+            <span class="chev">▸</span>
+          </span>
+        </summary>${rows}`;
+      weeksEl.appendChild(det);
+    });
+  }
+
+  // ── Odds toggle wiring ──────────────────────────────────────────────────────
+  const toggleEl = document.getElementById('odds-toggle');
+  function paintToggle() { toggleEl.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.mode === oddsMode)); }
+  toggleEl.addEventListener('click', e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    oddsMode = btn.dataset.mode;
+    try { localStorage.setItem('accaOddsMode', oddsMode); } catch (err) {}
+    paintToggle(); renderOddsDependent();
+  });
+  function renderOddsDependent() {
+    tablesEl.innerHTML = D.teams.map(buildTeamTable_).join('');
+    renderWeeks();
+  }
+
+  paintToggle();
+  renderOddsDependent();
+})();
+</script>
+</body>
+</html>
