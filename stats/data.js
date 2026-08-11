@@ -19,11 +19,15 @@
      • Guilt Club  = the sole non-winner in a team is charged that week's full
                      expected return (they alone sank the acca)
 
+   MONKEY MAGIC (house benchmark)
+   ------------------------------
+   An automated team (see stats/admin/monkey.js). It appears ONLY in the
+   Head-to-Head and the week summaries — never in the player tables, BoS,
+   naughty step, long bets or guilt club. A toggle on the page shows/hides it.
+   Store its weekly acca under each week's "monkey" key.
+
    ODDS ARE ALWAYS DECIMAL here (1.45, 2.50, 4.00…). The page has a toggle to
    show them as fractions — you always TYPE decimals. A DRAW counts as a LOSS.
-
-   ADD A WEEK: copy the last { week: N … } block, bump week + date, set each
-   team's expectedReturn, fill each player's pick. Save, commit, push.
 
    Blocks marked DEMO are placeholder data — delete them when the season starts.
    ============================================================================ */
@@ -40,6 +44,7 @@ window.ACCA_DATA = {
   stakePerTeamPerWeek: 12.50,   // Total Staked per team = weeks played × this
   longBetOdds:         2.00,    // a pick at odds ≥ this counts as a "long bet"
   oddsDisplayDefault:  "decimal",
+  showMonkeyDefault:   true,     // Head-to-Head shows Monkey Magic by default
 
   /* ---- The two fixed teams (real line-ups) ----------------------------- */
   teams: [
@@ -50,6 +55,10 @@ window.ACCA_DATA = {
       img: "assets/teams/asia.svg",
       members: ["garry", "dewi", "steve", "lincoln", "abby"] },
   ],
+
+  /* ---- House team: Monkey Magic (automated benchmark; head-to-head only) - */
+  houseTeam: { id: "monkey", name: "Monkey Magic", short: "Monkey", color: "#7d3cc9",
+               img: "assets/teams/monkey.svg" },
 
   /* ---- The players (name = alias shown on the sheet) -------------------- */
   players: {
@@ -66,7 +75,8 @@ window.ACCA_DATA = {
   },
 
   /* ---- Weekly results (DEMO data, decimal odds) ------------------------ *
-   * expectedReturn = the team's 5-fold acca potential payout that week.     */
+   * expectedReturn = the team's 5-fold acca potential payout that week.     *
+   * monkey = the automated house team's 5 banker picks + acca return.       */
   weeks: [
 
     /* ---------- WEEK 1 (DEMO) — Asia: Garibaldi Reds sole loser ---------- */
@@ -83,10 +93,20 @@ window.ACCA_DATA = {
         steve:   { betOn: "Forest to win",      odds: 2.25, ballsOfSteel: false, result: "loss" },
         lincoln: { betOn: "Liverpool to win",   odds: 1.40, ballsOfSteel: false, result: "win"  },
         abby:    { betOn: "Charlton to win",    odds: 1.85, ballsOfSteel: true,  result: "win"  },
-      }
+      },
+      monkey: {
+        expectedReturn: 34.47, seed: "9f3a2b10", poolSize: 22,
+        picks: [
+          { pick: "Man City",      odds: 1.20, result: "win",  league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.15, result: "win",  league: "Bundesliga" },
+          { pick: "Real Madrid",   odds: 1.22, result: "win",  league: "La Liga" },
+          { pick: "Inter",         odds: 1.26, result: "win",  league: "Serie A" },
+          { pick: "PSV",           odds: 1.30, result: "loss", league: "Eredivisie" },
+        ],
+      },
     },
 
-    /* ---------- WEEK 2 (DEMO) — Europe acca LANDS ---------- */
+    /* ---------- WEEK 2 (DEMO) — Europe acca LANDS; Monkey lands too ------- */
     { week: 2, date: "2026-08-23",  note: "DEMO",
       expectedReturn: { europe: 124.30, asia: 96.00 },
       bets: {
@@ -100,7 +120,17 @@ window.ACCA_DATA = {
         steve:   { betOn: "Forest to win",      odds: 2.40, ballsOfSteel: true,  result: "loss" },
         lincoln: { betOn: "Liverpool -1",       odds: 2.30, ballsOfSteel: true,  result: "win"  },
         abby:    { betOn: "Charlton BTTS",      odds: 1.70, ballsOfSteel: false, result: "draw" },
-      }
+      },
+      monkey: {
+        expectedReturn: 40.80, seed: "1c4d7e22", poolSize: 25,
+        picks: [
+          { pick: "Liverpool", odds: 1.25, result: "win", league: "Premier League" },
+          { pick: "Barcelona", odds: 1.28, result: "win", league: "La Liga" },
+          { pick: "Bayern Munich", odds: 1.18, result: "win", league: "Bundesliga" },
+          { pick: "Juventus",  odds: 1.30, result: "win", league: "Serie A" },
+          { pick: "Ajax",      odds: 1.33, result: "win", league: "Eredivisie" },
+        ],
+      },
     },
 
     /* ---------- WEEK 3 (DEMO) — Asia acca LANDS ---------- */
@@ -117,7 +147,17 @@ window.ACCA_DATA = {
         steve:   { betOn: "Forest to win",      odds: 2.50, ballsOfSteel: false, result: "win"  },
         lincoln: { betOn: "Liverpool to win",   odds: 1.53, ballsOfSteel: false, result: "win"  },
         abby:    { betOn: "Charlton to win",    odds: 2.10, ballsOfSteel: false, result: "win"  },
-      }
+      },
+      monkey: {
+        expectedReturn: 35.80, seed: "7b2f9c01", poolSize: 19,
+        picks: [
+          { pick: "Man City",    odds: 1.22, result: "win",  league: "Premier League" },
+          { pick: "Real Madrid", odds: 1.20, result: "loss", league: "La Liga" },
+          { pick: "Inter",       odds: 1.24, result: "win",  league: "Serie A" },
+          { pick: "Bayern Munich", odds: 1.16, result: "win", league: "Bundesliga" },
+          { pick: "Feyenoord",   odds: 1.36, result: "loss", league: "Eredivisie" },
+        ],
+      },
     },
 
     /* ---------- WEEK 4 (DEMO) — Europe: Hurzeler-ball sole loser ---------- */
@@ -134,7 +174,17 @@ window.ACCA_DATA = {
         steve:   { betOn: "Forest draw",        odds: 3.10, ballsOfSteel: false, result: "draw" },
         lincoln: { betOn: "Liverpool to win",   odds: 1.45, ballsOfSteel: false, result: "win"  },
         abby:    { betOn: "Charlton to win",    odds: 1.95, ballsOfSteel: false, result: "loss" },
-      }
+      },
+      monkey: {
+        expectedReturn: 37.21, seed: "3e8a11ff", poolSize: 28,
+        picks: [
+          { pick: "Man City",      odds: 1.18, result: "win",  league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.14, result: "win",  league: "Bundesliga" },
+          { pick: "Barcelona",     odds: 1.30, result: "win",  league: "La Liga" },
+          { pick: "Juventus",      odds: 1.28, result: "draw", league: "Serie A" },
+          { pick: "PSV",           odds: 1.33, result: "win",  league: "Eredivisie" },
+        ],
+      },
     },
 
   ],

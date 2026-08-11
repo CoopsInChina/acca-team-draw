@@ -149,6 +149,36 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
 .highlight-banner { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 13px 18px; border-radius: 12px; border: 1px solid rgba(255,215,0,0.35); background: linear-gradient(90deg, rgba(255,215,0,0.14), rgba(255,215,0,0.04)); }
 .highlight-banner .hl-ic { font-size: 1.2rem; line-height: 1; }
 .highlight-banner .hl-txt { font-size: 0.95rem; font-weight: 600; color: #ffe9a6; line-height: 1.4; }
+
+/* ── Monkey toggle (header) ── */
+.mk-toggle { background: transparent; color: var(--muted); border: 1px solid var(--card-line); border-radius: 20px; padding: 5px 12px; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+.mk-toggle.on { background: rgba(125,60,201,0.22); color: #c9a6ec; border-color: rgba(125,60,201,0.55); }
+
+/* ── Head-to-head comparison table ── */
+.cmp-scroll { overflow-x: auto; }
+.cmp { display: grid; align-items: stretch; min-width: 320px; }
+.cmp > div { padding: 10px 12px; display: flex; align-items: center; }
+.cmp-corner { }
+.cmp-team { flex-direction: column; gap: 6px; text-align: center; justify-content: flex-end; border-bottom: 2px solid var(--tc); }
+.cmp-team.house { background: rgba(125,60,201,0.06); }
+.cmp-team .team-pic { width: 42px; height: 42px; }
+.cmp-tn { font-weight: 900; letter-spacing: 1px; color: var(--tc); font-size: 0.82rem; }
+.cmp-tag { font-size: 0.5rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border: 1px solid var(--card-line); border-radius: 10px; padding: 1px 6px; }
+.cmp-label { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); border-top: 1px solid rgba(255,255,255,0.06); }
+.cmp-val { justify-content: center; font-weight: 800; font-size: 0.98rem; font-variant-numeric: tabular-nums; border-top: 1px solid rgba(255,255,255,0.06); }
+.cmp-val.house { background: rgba(125,60,201,0.06); }
+.cmp-val.pos { color: var(--win); } .cmp-val.neg { color: var(--loss); }
+.cmp-val.best { color: var(--gold); }
+
+/* ── Monkey block in week-by-week ── */
+.week summary .won-mk { color: #c9a6ec; }
+.mk-block { border-top: 1px solid var(--card-line); background: rgba(125,60,201,0.06); }
+.mk-head { display: flex; align-items: center; gap: 8px; padding: 9px 16px; font-weight: 800; color: #c9a6ec; font-size: 0.82rem; }
+.mk-crest { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+.mk-head .mk-meta { margin-left: auto; font-weight: 600; color: var(--muted); font-size: 0.66rem; text-align: right; }
+.mk-head .landed { color: var(--win); font-weight: 800; }
+.bet-row.mk .bp { color: #d9c3f2; }
+.bet-row.mk .mk-dot { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 24px; }
 </style>
 </head>
 <body>
@@ -164,6 +194,7 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
         <button data-mode="decimal">Decimal</button>
         <button data-mode="fractional">Fractional</button>
       </span>
+      <button class="mk-toggle" id="mk-toggle">🐒 Monkey: on</button>
       <span><a href="../index.html">← Team Draw</a></span>
     </div>
     <div id="demo-flag"></div>
@@ -346,28 +377,62 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   const [tEu, tAsia] = D.teams;
   const sEu = teamStats[tEu.id], sAsia = teamStats[tAsia.id];
 
-  // ── Head to head ────────────────────────────────────────────────────────────
-  function h2hRow(label, euVal, asiaVal, euRaw, asiaRaw, sign) {
-    let euCls = '', asiaCls = '';
-    if (euRaw > asiaRaw) euCls = 'winner'; else if (asiaRaw > euRaw) asiaCls = 'winner';
-    if (sign) { euCls += (euRaw >= 0 ? ' pos' : ' neg'); asiaCls += (asiaRaw >= 0 ? ' pos' : ' neg'); }
-    return `<div class="h2h-row">
-      <div class="v eu ${euCls}">${euVal}</div>
-      <div class="lbl">${label}</div>
-      <div class="v asia ${asiaCls}">${asiaVal}</div></div>`;
+  // ── Monkey Magic (automated house benchmark team) ───────────────────────────
+  const houseTeam = D.houseTeam || null;
+  function computeMonkey() {
+    if (!houseTeam) return null;
+    const mw = D.weeks.filter(w => w.monkey && Array.isArray(w.monkey.picks) && w.monkey.picks.length);
+    if (!mw.length) return null;
+    let totalWins = 0, teamScore = 0, won = 0, weeksPlayed = 0;
+    mw.forEach(w => {
+      const picks = w.monkey.picks;
+      if (!picks.every(p => (p.result || 'pending').toLowerCase() !== 'pending')) return; // acca unsettled
+      weeksPlayed++;
+      const wins = picks.filter(p => (p.result || '').toLowerCase() === 'win').length;
+      totalWins += wins;
+      if (wins === picks.length) { teamScore++; won += Number(w.monkey.expectedReturn) || 0; }
+    });
+    const staked = weeksPlayed * STAKE, profit = won - staked;
+    return { team: houseTeam, house: true, totalWins, teamScore, staked, won, profit,
+             roi: staked ? (profit / staked) * 100 : 0, weeksPlayed };
   }
-  document.getElementById('h2h').innerHTML = `
-    <div class="h2h-head">
-      <div class="h2h-team eu"><span class="tn">${tEu.name}</span>${teamPic(tEu)}</div>
-      <div class="h2h-vs">VS</div>
-      <div class="h2h-team asia">${teamPic(tAsia)}<span class="tn">${tAsia.name}</span></div>
-    </div>
-    ${h2hRow('Individual Wins', sEu.totalWins, sAsia.totalWins, sEu.totalWins, sAsia.totalWins)}
-    ${h2hRow('Team Score', sEu.teamScore, sAsia.teamScore, sEu.teamScore, sAsia.teamScore)}
-    ${h2hRow('Total Staked', money(sEu.staked), money(sAsia.staked), 0, 0)}
-    ${h2hRow('Total Won', money(sEu.won), money(sAsia.won), sEu.won, sAsia.won)}
-    ${h2hRow('Profit', money(sEu.profit), money(sAsia.profit), sEu.profit, sAsia.profit, true)}
-    ${h2hRow('ROI', sEu.roi.toFixed(0) + '%', sAsia.roi.toFixed(0) + '%', sEu.roi, sAsia.roi, true)}`;
+  const sMonkey = computeMonkey();
+  const monkeyAvailable = !!sMonkey;
+  let showMonkey = monkeyAvailable && (D.showMonkeyDefault !== false);
+  try { const s = localStorage.getItem('accaShowMonkey'); if (s !== null) showMonkey = (s === '1') && monkeyAvailable; } catch (e) {}
+
+  // ── Head to head (Team EU vs Team Asia, + Monkey benchmark when shown) ──────
+  function renderH2H() {
+    const cols = [sEu, sAsia];
+    if (showMonkey && sMonkey) cols.push(sMonkey);
+    const metrics = [
+      { label: 'Individual Wins', get: s => s.totalWins, fmt: v => v },
+      { label: 'Team Score',      get: s => s.teamScore, fmt: v => v },
+      { label: 'Total Staked',    get: s => s.staked,    fmt: money, flat: true },
+      { label: 'Total Won',       get: s => s.won,       fmt: money },
+      { label: 'Profit',          get: s => s.profit,    fmt: money, sign: true },
+      { label: 'ROI',             get: s => s.roi,       fmt: v => v.toFixed(0) + '%', sign: true },
+    ];
+    let h = `<div class="cmp-scroll"><div class="cmp" style="grid-template-columns:132px repeat(${cols.length},minmax(92px,1fr))">`;
+    h += `<div class="cmp-corner"></div>`;
+    cols.forEach(c => {
+      h += `<div class="cmp-team${c.house ? ' house' : ''}" style="--tc:${c.team.color}">${teamPic(c.team)}<span class="cmp-tn">${c.team.short || c.team.name}</span>${c.house ? '<span class="cmp-tag">🐒 house</span>' : ''}</div>`;
+    });
+    metrics.forEach(m => {
+      h += `<div class="cmp-label">${m.label}</div>`;
+      const vals = cols.map(m.get);
+      const best = m.flat ? null : Math.max(...vals);
+      cols.forEach((c, i) => {
+        let cls = 'cmp-val';
+        if (m.sign) cls += vals[i] >= 0 ? ' pos' : ' neg';
+        if (c.house) cls += ' house';
+        if (!m.flat && cols.length > 1 && vals[i] === best) cls += ' best';
+        h += `<div class="${cls}">${m.fmt(vals[i])}</div>`;
+      });
+    });
+    h += `</div></div>`;
+    document.getElementById('h2h').innerHTML = h;
+  }
 
   // ── Accumulated EBIT chart ──────────────────────────────────────────────────
   function ebitSeries(t) {
@@ -511,15 +576,39 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
       const erAs = (w.expectedReturn && w.expectedReturn[tAsia.id]) || 0;
       const euLanded = teamWeekSettled(tEu, w) && teamAccaLands(tEu, w);
       const asLanded = teamWeekSettled(tAsia, w) && teamAccaLands(tAsia, w);
+
+      // Monkey Magic block (house benchmark) — stored per week, shown when toggled on
+      let mkBlock = '', mkChip = '';
+      if (showMonkey && houseTeam && w.monkey && Array.isArray(w.monkey.picks) && w.monkey.picks.length) {
+        const mk = w.monkey, picks = mk.picks;
+        const mkSettled = picks.every(p => (p.result || 'pending').toLowerCase() !== 'pending');
+        const mkAllWin = picks.every(p => (p.result || '').toLowerCase() === 'win');
+        const mkRows = picks.map(p => {
+          const r = (p.result || 'pending').toLowerCase();
+          return `<div class="bet-row mk">
+            <div class="bp"><span class="mk-dot">🐒</span>${p.pick}</div>
+            <div class="bet-sel">${p.league || ''}</div>
+            <div class="bet-odds">${fmtOdds(p.odds)}</div>
+            <div class="res ${r}">${r.toUpperCase()}</div></div>`;
+        }).join('');
+        const status = !mkSettled ? '· pending' : (mkAllWin ? '· <span class="landed">✓ LANDED</span>' : '· lost');
+        mkBlock = `<div class="mk-block">
+          <div class="mk-head"><img class="mk-crest" src="${houseTeam.img}" alt="" onerror="this.remove()"><span>${houseTeam.name}</span>
+            <span class="mk-meta">acca ${money(mk.expectedReturn || 0)} ${status} · pool ${mk.poolSize || picks.length}${mk.seed ? ' · seed ' + mk.seed : ''}</span></div>
+          ${mkRows}</div>`;
+        mkChip = `<span class="won-mk">${houseTeam.short} ${money(mk.expectedReturn || 0)}${mkSettled && mkAllWin ? ' <span class="landed">✓</span>' : ''}</span>`;
+      }
+
       det.innerHTML = `
         <summary>
           <span class="wl">Week ${w.week} <span class="dim" style="font-weight:400">${w.date || ''}</span></span>
           <span class="wr">
             <span class="won-eu">${tEu.short} ${money(erEu)}${euLanded ? ' <span class="landed">✓ WON</span>' : ''}</span>
             <span class="won-asia">${tAsia.short} ${money(erAs)}${asLanded ? ' <span class="landed">✓ WON</span>' : ''}</span>
+            ${mkChip}
             <span class="chev">▸</span>
           </span>
-        </summary>${rows}`;
+        </summary>${rows}${mkBlock}`;
       weeksEl.appendChild(det);
     });
   }
@@ -538,7 +627,23 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
     renderWeeks();
   }
 
+  // ── Monkey toggle wiring ────────────────────────────────────────────────────
+  const mkToggleEl = document.getElementById('mk-toggle');
+  function paintMonkeyToggle() {
+    if (!monkeyAvailable) { mkToggleEl.style.display = 'none'; return; }
+    mkToggleEl.style.display = '';
+    mkToggleEl.classList.toggle('on', showMonkey);
+    mkToggleEl.textContent = '🐒 Monkey: ' + (showMonkey ? 'on' : 'off');
+  }
+  mkToggleEl.addEventListener('click', () => {
+    showMonkey = !showMonkey;
+    try { localStorage.setItem('accaShowMonkey', showMonkey ? '1' : '0'); } catch (e) {}
+    paintMonkeyToggle(); renderH2H(); renderWeeks();
+  });
+
   paintToggle();
+  paintMonkeyToggle();
+  renderH2H();
   renderOddsDependent();
 })();
 </script>

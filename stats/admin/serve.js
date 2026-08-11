@@ -54,6 +54,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ---- Monkey Magic: generate this week's banker picks --------------------
+  if (req.method === 'GET' && req.url.split('?')[0] === '/api/monkey') {
+    const params = new URLSearchParams((req.url.split('?')[1] || ''));
+    const opts = { seed: params.get('seed') || undefined, mock: params.get('mock') === '1' };
+    require('./monkey.js').generate(opts)
+      .then(result => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+        console.log(`  🐒 monkey: ${result.poolSize} bankers, picked ${result.picks.length} (seed ${result.seed})`);
+      })
+      .catch(e => {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(e.message || e) }));
+        console.log(`  ✘ monkey failed: ${e.message || e}`);
+      });
+    return;
+  }
+
   // ---- Static file serving (from repo root) -------------------------------
   let urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
   if (urlPath === '/') urlPath = '/stats/admin/';

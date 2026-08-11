@@ -1,3 +1,5 @@
 .DS_Store
 *.bak
 stats/data.js.bak
+stats/admin/oddsapi.key
+*.picks.json

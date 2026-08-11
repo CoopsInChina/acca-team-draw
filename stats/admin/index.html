@@ -75,6 +75,20 @@ details.preview summary { cursor:pointer; font-size:0.72rem; letter-spacing:1px;
 details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.72rem; color:#cdd7ea; }
 .dirty-dot { display:none; width:8px; height:8px; border-radius:50%; background:var(--gold); }
 .dirty .dirty-dot { display:inline-block; }
+
+/* Monkey Magic card */
+#monkey-card .mk-status { font-size:0.6rem; letter-spacing:1px; text-transform:uppercase; color:#c9a6ec; margin-left:8px; }
+.mk-controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+#mk-generate { background:rgba(125,60,201,0.25); color:#e0cdf5; border:1px solid rgba(125,60,201,0.55); }
+#mk-generate:disabled { opacity:0.75; cursor:default; }
+.mk-empty { color:var(--muted); font-size:0.85rem; padding:6px 0; }
+.mkrow { display:grid; grid-template-columns: 1fr 150px 70px 116px; gap:10px; align-items:center; padding:8px 0; border-top:1px solid rgba(255,255,255,0.05); }
+.mkrow:first-of-type { border-top:none; }
+.mk-pick { font-weight:700; color:#e0cdf5; }
+.mk-league { color:var(--muted); font-size:0.8rem; }
+.mk-odds { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); }
+.dim { color:var(--muted); }
+@media (max-width:640px){ .mkrow { grid-template-columns: 1fr 60px 104px; } .mk-league { display:none; } }
 </style>
 </head>
 <body>
@@ -126,6 +140,16 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     </div>
     <div id="players"></div>
     <div class="hint">Odds are decimal (e.g. 1.45). A draw counts as a loss. Long bet = odds ≥ <b id="long-note">2.00</b>.</div>
+  </div>
+
+  <div class="card" id="monkey-card">
+    <h2>🐒 Monkey Magic <span class="mk-status" id="mk-status"></span></h2>
+    <div class="mk-controls">
+      <button type="button" id="mk-generate">🐒 Generate picks</button>
+      <span class="hint">Stage 1: pull this week’s bankers (home wins under 1.40) — locks after generating. Stage 2: set each result.</span>
+    </div>
+    <div id="mk-picks"></div>
+    <div class="hint" id="mk-summary"></div>
   </div>
 
   <details class="preview">
@@ -198,6 +222,62 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     sel.className = 'res-' + val;
   }
 
+  // ---- Monkey Magic — Stage 1 generate (locked after) + Stage 2 settle -----
+  const STAKE = DATA.stakePerTeamPerWeek || 12.50;
+  const HOUSE = DATA.houseTeam || null;
+  let monkeyState = null;   // { seed, poolSize, expectedReturn, picks:[{pick,odds,result,league}] }
+
+  function computeMonkeyER(picks) {
+    const prod = picks.reduce((a, p) => a * (Number(p.odds) || 1), 1);
+    return Math.round(prod * STAKE * 100) / 100;
+  }
+  function renderMonkey() {
+    if (!HOUSE) { const c = $('monkey-card'); if (c) c.style.display = 'none'; return; }
+    const wrap = $('mk-picks'), gen = $('mk-generate'), status = $('mk-status'), summ = $('mk-summary');
+    if (!monkeyState || !monkeyState.picks.length) {
+      wrap.innerHTML = '<div class="mk-empty">No picks yet — Stage 1: click Generate to pull this week’s bankers.</div>';
+      gen.disabled = false; gen.textContent = '🐒 Generate picks';
+      status.textContent = ''; summ.textContent = '';
+      return;
+    }
+    gen.disabled = true; gen.textContent = '🔒 Generated';          // regen guard: first attempt only
+    status.textContent = 'locked · seed ' + monkeyState.seed;
+    wrap.innerHTML = monkeyState.picks.map((p, i) => `
+      <div class="mkrow">
+        <div class="mk-pick">${p.pick}</div>
+        <div class="mk-league">${p.league || ''}</div>
+        <div class="mk-odds">${Number(p.odds).toFixed(2)}</div>
+        <select id="mk-res-${i}">${RESULTS.map(r => `<option value="${r}"${r === (p.result || 'pending') ? ' selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select>
+      </div>`).join('');
+    monkeyState.picks.forEach((p, i) => {
+      const s = $(`mk-res-${i}`); s.className = 'res-' + (p.result || 'pending');
+      s.addEventListener('change', e => { monkeyState.picks[i].result = e.target.value; s.className = 'res-' + e.target.value; markDirty(); refreshPreview(); });
+    });
+    summ.innerHTML = `Expected return <b>£${monkeyState.expectedReturn.toFixed(2)}</b> · pool ${monkeyState.poolSize} · seed ${monkeyState.seed} · <span class="dim">auto (product of odds × £${STAKE.toFixed(2)})</span>`;
+  }
+  async function generateMonkey() {
+    if (monkeyState && monkeyState.picks.length) { toast('Already generated — locked for this week', false); return; }
+    const gen = $('mk-generate'); gen.disabled = true; gen.textContent = '⏳ pulling odds…';
+    const mock = new URLSearchParams(location.search).get('mock') === '1';   // ?mock=1 → test with sample data
+    try {
+      const r = await fetch('/api/monkey' + (mock ? '?mock=1' : ''));
+      const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
+      if (!j.picks || j.picks.length < 5) throw new Error('only ' + (j.picks ? j.picks.length : 0) + ' picks returned');
+      monkeyState = {
+        seed: j.seed, poolSize: j.poolSize,
+        picks: j.picks.map(p => ({ pick: p.pick, odds: Number(p.odds), result: 'pending', league: p.league || '' })),
+        expectedReturn: 0,
+      };
+      monkeyState.expectedReturn = computeMonkeyER(monkeyState.picks);
+      renderMonkey(); markDirty(); refreshPreview();
+      toast('Monkey picks generated' + (mock ? ' (MOCK)' : '') + ' · seed ' + j.seed, true);
+    } catch (e) {
+      gen.disabled = false; gen.textContent = '🐒 Generate picks';
+      toast('Generate needs the local server + API key — ' + e.message, false);
+    }
+  }
+
   // ---- Week selector --------------------------------------------------------
   const sel = $('wk-select');
   function nextWeekNum() { return DATA.weeks.length ? Math.max(...DATA.weeks.map(w => w.week)) + 1 : 1; }
@@ -219,6 +299,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     ORDER.forEach(id => { $(`bet-${id}`).value=''; $(`odds-${id}`).value=''; $(`bos-${id}`).checked=false; const r=$(`res-${id}`); r.value='pending'; paintResult(id,'pending'); });
     $('btn-delete').style.display = 'none';
     loadedNote = null;
+    monkeyState = null; renderMonkey();
   }
   let loadedNote = null;
   function loadWeek(n) {
@@ -238,6 +319,11 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       const r = (b.result || 'pending'); $(`res-${id}`).value = r; paintResult(id, r);
     });
     $('btn-delete').style.display = '';
+    monkeyState = w.monkey ? {
+      seed: w.monkey.seed, poolSize: w.monkey.poolSize, expectedReturn: Number(w.monkey.expectedReturn) || 0,
+      picks: (w.monkey.picks || []).map(p => ({ pick: p.pick, odds: Number(p.odds), result: p.result || 'pending', league: p.league || '' })),
+    } : null;
+    renderMonkey();
   }
   sel.addEventListener('change', () => {
     if (sel.value === '__new') loadNew(); else loadWeek(+sel.value);
@@ -264,6 +350,13 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
         result: $(`res-${id}`).value || 'pending',
       };
     });
+    if (monkeyState && monkeyState.picks.length) {
+      week.monkey = {
+        expectedReturn: computeMonkeyER(monkeyState.picks),
+        seed: monkeyState.seed, poolSize: monkeyState.poolSize,
+        picks: monkeyState.picks.map(p => ({ pick: p.pick, odds: Number(p.odds) || 0, result: p.result || 'pending', league: p.league || '' })),
+      };
+    }
     return week;
   }
 
@@ -309,14 +402,20 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     if (d.highlight != null && d.highlight !== '') o += `  highlight: ${q(d.highlight)},\n\n`;
     o += `  stakePerTeamPerWeek: ${Number(d.stakePerTeamPerWeek)},\n`;
     o += `  longBetOdds:         ${Number(d.longBetOdds)},\n`;
-    o += `  oddsDisplayDefault:  ${q(d.oddsDisplayDefault)},\n\n`;
-    o += '  teams: [\n';
+    o += `  oddsDisplayDefault:  ${q(d.oddsDisplayDefault)},\n`;
+    if (d.showMonkeyDefault != null) o += `  showMonkeyDefault:   ${!!d.showMonkeyDefault},\n`;
+    o += '\n  teams: [\n';
     d.teams.forEach(t => {
       o += `    { id: ${q(t.id)}, name: ${q(t.name)}, short: ${q(t.short)}, color: ${q(t.color)},\n`;
       if (t.img) o += `      img: ${q(t.img)},\n`;
       o += `      members: [${t.members.map(q).join(', ')}] },\n`;
     });
-    o += '  ],\n\n  players: {\n';
+    o += '  ],\n\n';
+    if (d.houseTeam) {
+      const h = d.houseTeam;
+      o += `  houseTeam: { id: ${q(h.id)}, name: ${q(h.name)}, short: ${q(h.short)}, color: ${q(h.color)}${h.img ? ', img: ' + q(h.img) : ''} },\n\n`;
+    }
+    o += '  players: {\n';
     Object.keys(d.players).forEach(id => {
       const p = d.players[id];
       o += `    ${id}: { name: ${q(p.name)}, init: ${q(p.init)}${p.img ? ', img: ' + q(p.img) : ''} },\n`;
@@ -330,7 +429,17 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
         const b = (w.bets || {})[id]; if (!b) return;
         o += `        ${id}: { betOn: ${q(b.betOn)}, odds: ${Number(b.odds) || 0}, ballsOfSteel: ${!!b.ballsOfSteel}, result: ${q(b.result || 'pending')} },\n`;
       });
-      o += '      }\n    },\n';
+      o += '      }';
+      if (w.monkey && Array.isArray(w.monkey.picks) && w.monkey.picks.length) {
+        const m = w.monkey;
+        o += ',\n      monkey: {\n';
+        o += `        expectedReturn: ${Number(m.expectedReturn) || 0}, seed: ${q(m.seed)}, poolSize: ${Number(m.poolSize) || m.picks.length},\n`;
+        o += '        picks: [\n';
+        m.picks.forEach(p => { o += `          { pick: ${q(p.pick)}, odds: ${Number(p.odds) || 0}, result: ${q(p.result || 'pending')}, league: ${q(p.league || '')} },\n`; });
+        o += '        ],\n      }\n    },\n';
+      } else {
+        o += '\n    },\n';
+      }
     });
     o += '  ],\n\n};\n';
     return o;
@@ -374,6 +483,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   $('btn-download').addEventListener('click', () => { applyWeek(); download(); });
   $('btn-copy').addEventListener('click', () => { applyWeek(); copy(); });
   $('btn-delete').addEventListener('click', deleteWeek);
+  $('mk-generate').addEventListener('click', generateMonkey);
   [ 'wk-num','wk-date','wk-highlight','er-'+TEAMS[0].id,'er-'+TEAMS[1].id ].forEach(id => $(id).addEventListener('input', markDirty));
   playersEl.addEventListener('input', markDirty);
   window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
