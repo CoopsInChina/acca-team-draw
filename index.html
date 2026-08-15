@@ -165,6 +165,7 @@ body {
   line-height: 1.5;
   margin-top: 14px;
   min-height: 4.5em;
+  white-space: pre-line;           /* render the line breaks between banter items */
   text-shadow: 0 1px 6px rgba(0,0,0,0.85);
 }
 #spot-text.typing::after {
@@ -295,7 +296,7 @@ body {
 
   <div id="title">
     <h1>⚽ ACCA ACCA ACCA</h1>
-    <p>TEAM DRAW</p>
+    <p>Team Draw · 2pm, Sunday 16th August 2026</p>
   </div>
 
   <div id="pitch-wrap">
@@ -437,7 +438,7 @@ function layout() {
   const pitchW = Math.min(areaW * 0.90, 900);
   const pitchH = Math.round(pitchW * 0.48);
   const pitchLeft = (areaW - pitchW) / 2;
-  const pitchTop  = 65;
+  const pitchTop  = 104;   // clearance so the pitch never covers the title/subtitle
 
   pitch.style.width  = pitchW + 'px';
   pitch.style.height = pitchH + 'px';
@@ -582,8 +583,9 @@ let assigned = { t1: [], t2: [] };
 let picksMade = 0;               // presses that have placed players
 let poolIdx = 0;                 // next index into draftPool
 let nextTeamKey = 't1';          // team to receive the next single pick
-let complete = false;
-let busy = false;                // true while an animation is running
+let phase = 'idle';              // idle | announcing | awaitDismiss | settling | complete
+let current = null;              // the announcement currently on screen
+let queue = [];                  // pending announcements (captains queue two)
 
 const teamMeta = { t1: { col: T1_COL, border: T1_BORDER }, t2: { col: T2_COL, border: T2_BORDER } };
 const GOLD = '#ffd700';
@@ -594,15 +596,27 @@ function updateLabels() {
 }
 
 // ── Banter announcer ──────────────────────────────────────────────────────────
-const CAPTAIN_FLOURISH = ' …and he takes the armband. 🧢';
+const CAPTAIN_FLOURISH = '…and he takes the armband. 🧢';
+const rand = a => a[Math.floor(Math.random() * a.length)];
+const PICK_HEADS = [
+  'What a pick!', 'Get in!', 'Oh, that\'s a shout!', 'Back of the net!',
+  'Signing of the season!', 'The crowd goes wild!', 'Bargain of the window!',
+  'What a signing!', 'Cometh the hour…', 'Off the bench and on fire!',
+  'Now we\'re talking!', 'Straight into the XI!',
+];
+const CAPTAIN_HEADS = [
+  '🧢 Captain!', '🧢 Skipper steps up!', '🧢 Armband time!',
+  '🧢 Leader of men!', '🧢 He wears the armband!',
+];
 function pickBanter(playerId, isCaptain) {
   const p = PLAYERS.find(x => x.id === playerId);
-  const arr = (p && p.banter && p.banter.length) ? p.banter : ['What a pick!'];
-  let line = arr[Math.floor(Math.random() * arr.length)];
-  if (isCaptain) line += CAPTAIN_FLOURISH;
-  return line;
+  const lines = (p && p.banter && p.banter.length) ? p.banter.slice() : ['What a pick!'];
+  let text = lines.join('\n');                     // all three lines
+  if (isCaptain) text += '\n' + CAPTAIN_FLOURISH;
+  return text;
 }
 let typeTimer = null;
+let typing = null;                                 // { body, cb } while a line is typing
 function typeOut(head, body, cb) {
   const sp = document.getElementById('spotlight');
   const h  = document.getElementById('spot-head');
@@ -612,19 +626,33 @@ function typeOut(head, body, cb) {
   t.textContent = '';
   t.classList.add('typing');
   clearTimeout(typeTimer);
+  typing = { body, cb };
   let i = 0;
   (function step() {
-    if (i <= body.length) { t.textContent = body.slice(0, i); i++; typeTimer = setTimeout(step, 26); }
-    else { t.classList.remove('typing'); if (cb) cb(); }
+    if (i <= body.length) { t.textContent = body.slice(0, i); i++; typeTimer = setTimeout(step, 42); }
+    else { t.classList.remove('typing'); typing = null; if (cb) cb(); }
   })();
+}
+function finishTyping() {                           // click during typing → reveal it all
+  if (!typing) return false;
+  clearTimeout(typeTimer);
+  const t = document.getElementById('spot-text');
+  t.textContent = typing.body;
+  t.classList.remove('typing');
+  const cb = typing.cb; typing = null;
+  if (cb) cb();
+  return true;
 }
 function hideSpot() { document.getElementById('spotlight').style.opacity = '0'; }
 
-// Pick → glide to the spotlight (enlarge + type banter) → settle into the pitch slot
-function announceAndPlace(playerId, teamKey, slotIndex, isCaptain, done) {
+// Announce one player: glide to spotlight, enlarge, type all the banter, then WAIT
+function startAnnouncement() {
+  current = queue.shift();
+  phase = 'announcing';
+  btn.disabled = true;
+  const { playerId, isCaptain } = current;
   const el = els[playerId];
   const pc = el.querySelector('.pc');
-  const meta = teamMeta[teamKey];
 
   // 1. "selected!" shake in the dugout
   pc.style.animation = 'none'; pc.offsetHeight; pc.style.animation = 'shake-card 0.45s ease forwards';
@@ -640,42 +668,60 @@ function announceAndPlace(playerId, teamKey, slotIndex, isCaptain, done) {
     pc.style.transform = 'translate(-50%,-50%) scale(2.5)';
     el.classList.add('spot');
 
+    // 3. type all three banter lines, then wait for a click to place
     setTimeout(() => {
-      // 3. type the banter
-      typeOut(isCaptain ? '🧢  Captain!' : 'What a pick!', pickBanter(playerId, isCaptain), () => {
-        // 4. hold, then settle into the pitch slot
-        setTimeout(() => {
-          hideSpot();
-          const pos = POSITIONS[slotIndex];
-          const tx = lyt.pitchLeft + (pos[teamKey][0] / 100) * lyt.pitchW;
-          const ty = lyt.pitchTop  + (pos[teamKey][1] / 100) * lyt.pitchH;
-          pc.style.transform = 'translate(-50%,-50%) scale(1)';
-          el.style.left = tx + 'px';
-          el.style.top  = ty + 'px';
-
-          setTimeout(() => {
-            el.classList.remove('spot'); el.style.zIndex = '';
-            const av = document.getElementById('av-' + playerId);
-            av.style.background  = meta.col;
-            av.style.borderColor = isCaptain ? GOLD : meta.border;
-            if (isCaptain) av.classList.add('captain');
-            const posTag = document.getElementById('pos-' + playerId);
-            posTag.textContent = isCaptain ? '★ CAPTAIN' : pos.role;
-            posTag.style.color = isCaptain ? GOLD : meta.border;
-            posTag.style.opacity = '1';
-            burst(tx, ty, isCaptain ? GOLD : meta.col);
-            pc.style.transition = '';
-            if (done) done();
-          }, 720);
-        }, 850);
+      typeOut(isCaptain ? rand(CAPTAIN_HEADS) : rand(PICK_HEADS), pickBanter(playerId, isCaptain), () => {
+        phase = 'awaitDismiss';
+        btn.textContent = '▶  PLACE ON PITCH';
+        btn.disabled = false;
       });
     }, 720);
   }, 450);
 }
 
+// Settle the announced player onto their pitch slot, then advance the flow
+function settleCurrent() {
+  if (!current) return;
+  phase = 'settling';
+  btn.disabled = true;
+  hideSpot();
+  const { playerId, teamKey, slot, isCaptain } = current;
+  const el = els[playerId];
+  const pc = el.querySelector('.pc');
+  const meta = teamMeta[teamKey];
+  const pos = POSITIONS[slot];
+  const tx = lyt.pitchLeft + (pos[teamKey][0] / 100) * lyt.pitchW;
+  const ty = lyt.pitchTop  + (pos[teamKey][1] / 100) * lyt.pitchH;
+
+  pc.style.transform = 'translate(-50%,-50%) scale(1)';
+  el.style.left = tx + 'px';
+  el.style.top  = ty + 'px';
+
+  setTimeout(() => {
+    el.classList.remove('spot'); el.style.zIndex = '';
+    const av = document.getElementById('av-' + playerId);
+    av.style.background  = meta.col;
+    av.style.borderColor = isCaptain ? GOLD : meta.border;
+    if (isCaptain) av.classList.add('captain');
+    const posTag = document.getElementById('pos-' + playerId);
+    posTag.textContent = isCaptain ? '★ CAPTAIN' : pos.role;
+    posTag.style.color = isCaptain ? GOLD : meta.border;
+    posTag.style.opacity = '1';
+    burst(tx, ty, isCaptain ? GOLD : meta.col);
+    pc.style.transition = '';
+    current = null;
+
+    if (queue.length) { startAnnouncement(); }               // e.g. the second captain
+    else if ((assigned.t1.length + assigned.t2.length) >= PLAYERS.length) {
+      phase = 'complete'; dugoutLbl.style.opacity = '0'; btn.textContent = '🔄  DRAW AGAIN'; btn.disabled = false;
+    } else {
+      phase = 'idle'; btn.textContent = '▶  NEXT PLAYER'; btn.disabled = false;
+    }
+  }, 720);
+}
+
 // First press → a captain for each team (1 v 1), announced one after the other
 function pickCaptains() {
-  busy = true; btn.disabled = true;
   const cap1 = draftPool[0], cap2 = draftPool[1];
   poolIdx = 2;
   assigned.t1 = [cap1.id];
@@ -683,17 +729,15 @@ function pickCaptains() {
   picksMade = 1;
   nextTeamKey = 't1';
   lbl1.style.opacity = '1'; lbl2.style.opacity = '1'; updateLabels();
-
-  announceAndPlace(cap1.id, 't1', 0, true, () => {
-    announceAndPlace(cap2.id, 't2', 0, true, () => {
-      btn.textContent = '▶  NEXT PLAYER'; btn.disabled = false; busy = false;
-    });
-  });
+  queue = [
+    { playerId: cap1.id, teamKey: 't1', slot: 0, isCaptain: true },
+    { playerId: cap2.id, teamKey: 't2', slot: 0, isCaptain: true },
+  ];
+  startAnnouncement();
 }
 
 // Later presses → one player, alternating teams
 function pickNext() {
-  busy = true; btn.disabled = true;
   const p = draftPool[poolIdx++];
   const teamKey = nextTeamKey;
   const slot = assigned[teamKey].length;
@@ -701,20 +745,13 @@ function pickNext() {
   nextTeamKey = teamKey === 't1' ? 't2' : 't1';
   picksMade++;
   updateLabels();
-
-  announceAndPlace(p.id, teamKey, slot, false, () => {
-    if ((assigned.t1.length + assigned.t2.length) >= PLAYERS.length) {
-      complete = true; dugoutLbl.style.opacity = '0'; btn.textContent = '🔄  DRAW AGAIN';
-    } else {
-      btn.textContent = '▶  NEXT PLAYER';
-    }
-    btn.disabled = false; busy = false;
-  });
+  queue = [{ playerId: p.id, teamKey, slot, isCaptain: false }];
+  startAnnouncement();
 }
 
 // Reset to a fresh draft (players back in the dugout)
 function resetDraft(reshuffle) {
-  clearTimeout(typeTimer); hideSpot();
+  clearTimeout(typeTimer); typing = null; hideSpot();
   document.getElementById('spot-head').textContent = '';
   document.getElementById('spot-text').textContent = '';
   resetPlayers();
@@ -728,25 +765,29 @@ function resetDraft(reshuffle) {
     const av = document.getElementById('av-' + p.id); if (av) av.classList.remove('captain');
   });
   assigned = { t1: [], t2: [] };
-  picksMade = 0; poolIdx = 0; nextTeamKey = 't1'; complete = false; busy = false;
+  picksMade = 0; poolIdx = 0; nextTeamKey = 't1'; phase = 'idle'; current = null; queue = [];
   lbl1.textContent = '🟠 TEAM 1'; lbl2.textContent = 'TEAM 2 🔵';
   if (reshuffle) draftPool = shuffle(PLAYERS);
 }
 
-function handleBtn() {
-  if (busy) return;
-  if (complete) {
+// Single entry point for the button and for clicking anywhere on the stage
+function advance() {
+  if (phase === 'settling') return;                        // mid-move, ignore
+  if (phase === 'announcing') { finishTyping(); return; }  // click reveals the rest of the text
+  if (phase === 'complete') {
     btn.disabled = true;
     resetDraft(true);
     btn.textContent = '⚽  PICK CAPTAINS';
     setTimeout(() => { btn.disabled = false; }, 650);
     return;
   }
-  if (picksMade === 0) pickCaptains();
+  if (phase === 'awaitDismiss') { settleCurrent(); return; }  // click places the player
+  if (picksMade === 0) pickCaptains();                       // idle → next pick
   else pickNext();
 }
 
-btn.addEventListener('click', handleBtn);
+btn.addEventListener('click', (e) => { e.stopPropagation(); advance(); });
+stage.addEventListener('click', () => { if (phase === 'announcing' || phase === 'awaitDismiss') advance(); });
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 function init() {
@@ -754,7 +795,7 @@ function init() {
   createPlayers(lyt);
   draftPool = shuffle(PLAYERS);
   assigned = { t1: [], t2: [] };
-  picksMade = 0; poolIdx = 0; nextTeamKey = 't1'; complete = false; busy = false;
+  picksMade = 0; poolIdx = 0; nextTeamKey = 't1'; phase = 'idle'; current = null; queue = [];
   lbl1.style.opacity = '0'; lbl2.style.opacity = '0';
   lbl1.textContent = '🟠 TEAM 1'; lbl2.textContent = 'TEAM 2 🔵';
   dugoutLbl.style.opacity = '1';
