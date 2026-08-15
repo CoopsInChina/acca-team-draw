@@ -168,6 +168,11 @@ body {
   white-space: pre-line;           /* render the line breaks between banter items */
   text-shadow: 0 1px 6px rgba(0,0,0,0.85);
 }
+#spot-text.summary {
+  font-size: clamp(0.85rem, 1.15vw, 1.05rem);
+  line-height: 1.45;
+  min-height: 0;
+}
 #spot-text.typing::after {
   content: '▌';
   color: #ffd700;
@@ -431,11 +436,12 @@ function layout() {
 
   // On wide screens reserve a right-hand column for the spotlight announcer
   const wide = vw >= 1000;
-  const rightCol = wide ? Math.min(vw * 0.30, 440) : 0;
+  const rightCol = wide ? Math.min(vw * 0.36, 480) : 0;
   const areaW = vw - rightCol;
 
   // Pitch fills the (remaining) area width, constrained to a 5-a-side ratio
-  const pitchW = Math.min(areaW * 0.90, 900);
+  // (kept narrower than the area so the dugout/player cards have room either side)
+  const pitchW = Math.min(areaW * 0.78, 760);
   const pitchH = Math.round(pitchW * 0.48);
   const pitchLeft = (areaW - pitchW) / 2;
   const pitchTop  = 104;   // clearance so the pitch never covers the title/subtitle
@@ -470,9 +476,9 @@ function layout() {
   if (wide) {
     spotX = areaW + rightCol / 2;
     spotY = pitchTop + 135;
-    sp.style.left = (areaW + 24) + 'px';
+    sp.style.left = (areaW + 28) + 'px';
     sp.style.top  = (spotY + 100) + 'px';
-    sp.style.width = (rightCol - 48) + 'px';
+    sp.style.width = (rightCol - 68) + 'px';   // extra right-hand margin so text never hugs the edge
     sp.style.textAlign = 'left';
   } else {
     spotX = vw / 2;
@@ -624,6 +630,7 @@ function typeOut(head, body, cb) {
   sp.style.opacity = '1';
   h.textContent = head;
   t.textContent = '';
+  t.classList.remove('summary');
   t.classList.add('typing');
   clearTimeout(typeTimer);
   typing = { body, cb };
@@ -644,6 +651,42 @@ function finishTyping() {                           // click during typing → r
   return true;
 }
 function hideSpot() { document.getElementById('spotlight').style.opacity = '0'; }
+
+// ── End-of-draft verdict ──────────────────────────────────────────────────────
+const LAST_SEASON_PCT = { tim:69, lacey:80, niblett:57, mikael:67, roger:59, garry:86, dewi:83, steve:80, lincoln:74, abby:62 };
+function nameOf(id) { const p = PLAYERS.find(x => x.id === id); return p ? p.name : id; }
+function buildSummaryNotes() {
+  const t1 = assigned.t1, t2 = assigned.t2;
+  const cap1 = t1[0], cap2 = t2[0];
+  const pct = id => (LAST_SEASON_PCT[id] != null ? LAST_SEASON_PCT[id] : 0);
+  const capOf = id => (t1.includes(id) ? cap1 : cap2);
+  const sameTeam = (a, b) => (t1.includes(a) && t1.includes(b)) || (t2.includes(a) && t2.includes(b));
+  const notes = [];
+
+  if (sameTeam('garry', 'steve')) notes.push('🔩 Garry and Steve on the same side — Balls of Steel is going to be challenging again!');
+  if (sameTeam('dewi', 'abby'))  notes.push('🐉 Dewi and Abby together — two Welsh dragons reunited once again!');
+
+  const nonCaps = [...t1.slice(1), ...t2.slice(1)];
+  if (nonCaps.length) {
+    const best  = nonCaps.reduce((a, b) => (pct(b) > pct(a) ? b : a));
+    const worst = nonCaps.reduce((a, b) => (pct(b) < pct(a) ? b : a));
+    notes.push(`⭐ Captain ${nameOf(capOf(best))} must be feeling lucky — landed ${nameOf(best)} (${pct(best)}% last season).`);
+    if (worst !== best) notes.push(`😬 Will Captain ${nameOf(capOf(worst))}'s side be happy with ${nameOf(worst)}? (${pct(worst)}% last term.)`);
+  }
+
+  const last = draftPool[draftPool.length - 1].id;   // last one drafted
+  notes.push(`🎒 Playground memories — ${nameOf(last)} picked last again… but might be just the gift Captain ${nameOf(capOf(last))} needed.`);
+
+  return notes;
+}
+function showSummary() {
+  const notes = buildSummaryNotes();
+  document.getElementById('spot-head').textContent = '🔔 Teams are set!';
+  const t = document.getElementById('spot-text');
+  t.classList.remove('typing'); t.classList.add('summary');
+  t.textContent = notes.join('\n\n');
+  document.getElementById('spotlight').style.opacity = '1';
+}
 
 // Announce one player: glide to spotlight, enlarge, type all the banter, then WAIT
 function startAnnouncement() {
@@ -713,7 +756,7 @@ function settleCurrent() {
 
     if (queue.length) { startAnnouncement(); }               // e.g. the second captain
     else if ((assigned.t1.length + assigned.t2.length) >= PLAYERS.length) {
-      phase = 'complete'; dugoutLbl.style.opacity = '0'; btn.textContent = '🔄  DRAW AGAIN'; btn.disabled = false;
+      phase = 'complete'; dugoutLbl.style.opacity = '0'; showSummary(); btn.textContent = '🔄  DRAW AGAIN'; btn.disabled = false;
     } else {
       phase = 'idle'; btn.textContent = '▶  NEXT PLAYER'; btn.disabled = false;
     }
@@ -753,7 +796,7 @@ function pickNext() {
 function resetDraft(reshuffle) {
   clearTimeout(typeTimer); typing = null; hideSpot();
   document.getElementById('spot-head').textContent = '';
-  document.getElementById('spot-text').textContent = '';
+  const st = document.getElementById('spot-text'); st.textContent = ''; st.classList.remove('summary', 'typing');
   resetPlayers();
   PLAYERS.forEach(p => {
     const el = els[p.id];
