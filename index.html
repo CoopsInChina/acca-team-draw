@@ -143,6 +143,41 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 14px 3px rgba(255,215,0,0.7);
 }
 .avatar .ini { position: relative; z-index: 1; }
+
+/* ── Spotlight announcer ── */
+#spotlight {
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 45;
+}
+#spot-head {
+  color: #ffd700;
+  font-weight: 900;
+  font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+  letter-spacing: 1px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.75);
+}
+#spot-text {
+  color: #fff;
+  font-size: clamp(1rem, 1.5vw, 1.35rem);
+  line-height: 1.5;
+  margin-top: 14px;
+  min-height: 4.5em;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+}
+#spot-text.typing::after {
+  content: '▌';
+  color: #ffd700;
+  margin-left: 1px;
+  animation: caret-blink 0.8s steps(1) infinite;
+}
+@keyframes caret-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+.player.spot { z-index: 70; }
+.player.spot .avatar {
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 26px 6px rgba(255,215,0,0.35);
+}
 .avatar img {
   position: absolute;
   inset: 0;
@@ -301,21 +336,66 @@ body {
   <button id="btn">⚽ &nbsp;DRAW TEAMS</button>
   <div id="dugout-label">— SQUAD —</div>
 
+  <div id="spotlight">
+    <div id="spot-head"></div>
+    <div id="spot-text"></div>
+  </div>
+
 </div>
 
 <script>
 // ── Players ──────────────────────────────────────────────────────────────────
 const PLAYERS = [
-  { id:'tim',     name:'Tim',     alias:'City Till I Die',    init:'TIM' },
-  { id:'lacey',   name:'Lacey',   alias:'Next Yrs Magpie',    init:'LAC' },
-  { id:'niblett', name:'Niblett', alias:'Spursy',             init:'NIB' },
-  { id:'mikael',  name:'Mikael',  alias:'Last Proletarians',  init:'MIK' },
-  { id:'roger',   name:'Roger',   alias:'Hurzeler-ball',      init:'ROG' },
-  { id:'garry',   name:'Garry',   alias:'GloryHunter',        init:'GAR' },
-  { id:'dewi',    name:'Dewi',    alias:'Bang Average',       init:'DEW' },
-  { id:'abby',    name:'Abby',    alias:'Valley Commando',    init:'ABB' },
-  { id:'lincoln', name:'Lincoln', alias:'Red Devils',         init:'LIN' },
-  { id:'steve',   name:'Steve',   alias:'Garibaldi Reds',     init:'STV' },
+  { id:'tim', name:'Tim', alias:'City Till I Die', init:'TIM', banter:[
+    "Bristol City 'til he dies — up in Edinburgh — and his acca died four times last season.",
+    "£669 in the red: the Guilt Club's reigning chairman, Ashton Gate's finest export.",
+    "Robins loyalist, relegation-form punter — 69% and a mountain of guilt.",
+  ]},
+  { id:'lacey', name:'Lacey', alias:'Next Yrs Magpie', init:'LAC', banter:[
+    "Watches the Toon from an Edinburgh sofa — 80% right and still swears it's coming next year.",
+    "Europe's most reliable. Newcastle's only trophy is his win rate.",
+    "Three-bet heater, Geordie heart, Scottish postcode. Next year, lads.",
+  ]},
+  { id:'niblett', name:'Niblett', alias:'Spursy', init:'NIB', banter:[
+    "Cockney by birth, Spurs by curse, deckchair by the seaside — lowest strike rate in the league.",
+    "Backs big prices like Spurs back a title: six long shots landed. Lads, it's happening.",
+    "57% and bottling — but nobody hits the outsiders like the seaside Spursy.",
+  ]},
+  { id:'mikael', name:'Mikael', alias:'Last Proletarians', init:'MIK', banter:[
+    "Straight outta Gothenburg — Änglarna in his heart, a losing streak on his coupon.",
+    "Seize the means of accumulation, comrade! Redistributing his stake to the bookies since forever.",
+    "IFK 'til the revolution — 67% and a manifesto that doesn't cover accas.",
+  ]},
+  { id:'roger', name:'Roger', alias:'Hurzeler-ball', init:'ROG', banter:[
+    "A grumpy Brit in the Swiss Alps, moaning about Brighton across three time zones.",
+    "Trusts the process. The process delivered three failed long bets and a scowl.",
+    "All possession, no end product, no smile — an xG of pure heartbreak.",
+  ]},
+  { id:'garry', name:'Garry', alias:'GloryHunter', init:'GAR', banter:[
+    "A Forest fan called GloryHunter — 86% right and the last Brit standing in China.",
+    "Never loses a penny, never backs a price over 1.38 — the GloryHunter picks 'em off. 🩰",
+    "Outlasted everyone in China and everyone in the table: £0 guilt, pure front-running.",
+  ]},
+  { id:'dewi', name:'Dewi', alias:'Bang Average', init:'DEW', banter:[
+    "A Welshman in India backing Liverpool — 'Bang Average' at 83%, the biggest lie in the league.",
+    "Anfield from afar, odds of 1.31 — gloriously boring, quietly brilliant.",
+    "Bang Average by name, second-best by numbers. Don't tell him, he'll dab.",
+  ]},
+  { id:'abby', name:'Abby', alias:'Valley Commando', init:'ABB', banter:[
+    "Cardiff to the core, commanding from Hong Kong — Balls of Steel champ, seven heart-attacks deep.",
+    "Fearless, reckless, personally responsible ten times over — £660 of guilt with a Bluebird badge.",
+    "Over the top every week from the far side of the planet: glory or the Naughty Step, never in between.",
+  ]},
+  { id:'lincoln', name:'Lincoln', alias:'Red Devils', init:'LIN', banter:[
+    "Jamaican-cool, Florida-based, Old Trafford-hearted — 74% and no fuss.",
+    "Steady hand, sneaky guilt: four little daggers in the acca from the Sunshine State.",
+    "United from the beach. No drama, just results. Mostly.",
+  ]},
+  { id:'steve', name:'Steve', alias:'Garibaldi Reds', init:'STV', banter:[
+    "Forest in the heart, freshly landed in Germany — 80% sharp, then bins four long bets.",
+    "Chases the big price like Forest chase 17th. New country, same £485 of guilt.",
+    "Garibaldi red-hot on bankers, red-faced on coupons — now with added German efficiency.",
+  ]},
 ];
 
 // 5-a-side positions as fractions of pitch [x%, y%]
@@ -348,43 +428,61 @@ function layout() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
-  // Pitch: 88% viewport width, constrained height at 16:9 pitch ratio (wider)
-  const pitchW = Math.min(vw * 0.88, 900);
-  const pitchH = Math.round(pitchW * 0.48); // 5-a-side wider than tall
-  const pitchLeft = (vw - pitchW) / 2;
+  // On wide screens reserve a right-hand column for the spotlight announcer
+  const wide = vw >= 1000;
+  const rightCol = wide ? Math.min(vw * 0.30, 440) : 0;
+  const areaW = vw - rightCol;
+
+  // Pitch fills the (remaining) area width, constrained to a 5-a-side ratio
+  const pitchW = Math.min(areaW * 0.90, 900);
+  const pitchH = Math.round(pitchW * 0.48);
+  const pitchLeft = (areaW - pitchW) / 2;
   const pitchTop  = 65;
 
   pitch.style.width  = pitchW + 'px';
   pitch.style.height = pitchH + 'px';
-  // set pitch-wrap position directly (no CSS transform involved)
   pitchWrap.style.left = pitchLeft + 'px';
   pitchWrap.style.top  = pitchTop + 'px';
 
-  // Layout order below pitch: dugout label → row1 → row2 → button
-  // Button pinned near bottom; players fill the gap between pitch and button
+  // Button pinned near bottom; dugout rows fill the gap between pitch and button
   const btnH    = 52;
-  const btnBot  = 18; // gap from viewport bottom
+  const btnBot  = 18;
   const btnTop  = vh - btnH - btnBot;
   btn.style.top = btnTop + 'px';
 
-  // Two player rows fill the space between pitch and button
   const gapTop    = pitchTop + pitchH + 10;
   const gapBot    = btnTop - 10;
   const gapH      = gapBot - gapTop;
-  const rowSpan   = 80;  // px between row centres
-  const rowBlock  = rowSpan; // two rows total height
+  const rowSpan   = 80;
   const midGap    = gapTop + gapH / 2;
-  const rowY1     = midGap - rowBlock / 2;
+  const rowY1     = midGap - rowSpan / 2;
   const rowY2     = rowY1 + rowSpan;
 
-  // Dugout label just above row1
   dugoutLbl.style.top = (rowY1 - 22) + 'px';
 
-  const totalW = pitchW;
   const startX = pitchLeft;
-  const step   = totalW / 5;
+  const step   = pitchW / 5;
 
-  return { pitchLeft, pitchTop, pitchW, pitchH, rowY1, rowY2, startX, step };
+  // Spotlight: right column on wide screens, else a centred overlay over the pitch
+  const sp = document.getElementById('spotlight');
+  let spotX, spotY;
+  if (wide) {
+    spotX = areaW + rightCol / 2;
+    spotY = pitchTop + 135;
+    sp.style.left = (areaW + 24) + 'px';
+    sp.style.top  = (spotY + 100) + 'px';
+    sp.style.width = (rightCol - 48) + 'px';
+    sp.style.textAlign = 'left';
+  } else {
+    spotX = vw / 2;
+    spotY = pitchTop + 95;
+    sp.style.left = '20px';
+    sp.style.top  = (pitchTop + 200) + 'px';
+    sp.style.width = (vw - 40) + 'px';
+    sp.style.textAlign = 'center';
+  }
+
+  return { pitchLeft, pitchTop, pitchW, pitchH, rowY1, rowY2, startX, step, spotX, spotY };
 }
 
 // ── Create player elements ────────────────────────────────────────────────────
@@ -495,42 +593,87 @@ function updateLabels() {
   lbl2.textContent = `${assigned.t2.length} · TEAM 2 🔵`;
 }
 
-// Fly one player from the dugout to their pitch slot
-function placePlayer(playerId, teamKey, slotIndex, isCaptain) {
-  const pos = POSITIONS[slotIndex];
-  const tx = lyt.pitchLeft + (pos[teamKey][0] / 100) * lyt.pitchW;
-  const ty = lyt.pitchTop  + (pos[teamKey][1] / 100) * lyt.pitchH;
-  const meta = teamMeta[teamKey];
+// ── Banter announcer ──────────────────────────────────────────────────────────
+const CAPTAIN_FLOURISH = ' …and he takes the armband. 🧢';
+function pickBanter(playerId, isCaptain) {
+  const p = PLAYERS.find(x => x.id === playerId);
+  const arr = (p && p.banter && p.banter.length) ? p.banter : ['What a pick!'];
+  let line = arr[Math.floor(Math.random() * arr.length)];
+  if (isCaptain) line += CAPTAIN_FLOURISH;
+  return line;
+}
+let typeTimer = null;
+function typeOut(head, body, cb) {
+  const sp = document.getElementById('spotlight');
+  const h  = document.getElementById('spot-head');
+  const t  = document.getElementById('spot-text');
+  sp.style.opacity = '1';
+  h.textContent = head;
+  t.textContent = '';
+  t.classList.add('typing');
+  clearTimeout(typeTimer);
+  let i = 0;
+  (function step() {
+    if (i <= body.length) { t.textContent = body.slice(0, i); i++; typeTimer = setTimeout(step, 26); }
+    else { t.classList.remove('typing'); if (cb) cb(); }
+  })();
+}
+function hideSpot() { document.getElementById('spotlight').style.opacity = '0'; }
+
+// Pick → glide to the spotlight (enlarge + type banter) → settle into the pitch slot
+function announceAndPlace(playerId, teamKey, slotIndex, isCaptain, done) {
   const el = els[playerId];
   const pc = el.querySelector('.pc');
+  const meta = teamMeta[teamKey];
 
-  // "selected!" shake, then fly out
-  pc.style.animation = 'none'; pc.offsetHeight; pc.style.animation = 'shake-card 0.5s ease forwards';
+  // 1. "selected!" shake in the dugout
+  pc.style.animation = 'none'; pc.offsetHeight; pc.style.animation = 'shake-card 0.45s ease forwards';
 
   setTimeout(() => {
-    el.style.transition = 'left 0.72s cubic-bezier(0.34,1.45,0.64,1), top 0.72s cubic-bezier(0.34,1.45,0.64,1)';
-    el.style.left = tx + 'px';
-    el.style.top  = ty + 'px';
+    // 2. glide to the spotlight and scale up
+    el.style.zIndex = 70;
+    el.style.transition = 'left 0.7s cubic-bezier(0.34,1.4,0.64,1), top 0.7s cubic-bezier(0.34,1.4,0.64,1)';
+    el.style.left = lyt.spotX + 'px';
+    el.style.top  = lyt.spotY + 'px';
+    pc.style.animation = '';
+    pc.style.transition = 'transform 0.55s cubic-bezier(0.34,1.4,0.64,1)';
+    pc.style.transform = 'translate(-50%,-50%) scale(2.5)';
+    el.classList.add('spot');
 
     setTimeout(() => {
-      const av = document.getElementById('av-' + playerId);
-      av.style.background  = meta.col;
-      av.style.borderColor = isCaptain ? GOLD : meta.border;
-      if (isCaptain) av.classList.add('captain');
+      // 3. type the banter
+      typeOut(isCaptain ? '🧢  Captain!' : 'What a pick!', pickBanter(playerId, isCaptain), () => {
+        // 4. hold, then settle into the pitch slot
+        setTimeout(() => {
+          hideSpot();
+          const pos = POSITIONS[slotIndex];
+          const tx = lyt.pitchLeft + (pos[teamKey][0] / 100) * lyt.pitchW;
+          const ty = lyt.pitchTop  + (pos[teamKey][1] / 100) * lyt.pitchH;
+          pc.style.transform = 'translate(-50%,-50%) scale(1)';
+          el.style.left = tx + 'px';
+          el.style.top  = ty + 'px';
 
-      pc.style.animation = 'arrive 0.4s ease forwards';
-
-      const posTag = document.getElementById('pos-' + playerId);
-      posTag.textContent = isCaptain ? '★ CAPTAIN' : pos.role;
-      posTag.style.color = isCaptain ? GOLD : meta.border;
-      posTag.style.opacity = '1';
-
-      burst(tx, ty, isCaptain ? GOLD : meta.col);
-    }, 730);
-  }, 500);
+          setTimeout(() => {
+            el.classList.remove('spot'); el.style.zIndex = '';
+            const av = document.getElementById('av-' + playerId);
+            av.style.background  = meta.col;
+            av.style.borderColor = isCaptain ? GOLD : meta.border;
+            if (isCaptain) av.classList.add('captain');
+            const posTag = document.getElementById('pos-' + playerId);
+            posTag.textContent = isCaptain ? '★ CAPTAIN' : pos.role;
+            posTag.style.color = isCaptain ? GOLD : meta.border;
+            posTag.style.opacity = '1';
+            burst(tx, ty, isCaptain ? GOLD : meta.col);
+            pc.style.transition = '';
+            if (done) done();
+          }, 720);
+        }, 850);
+      });
+    }, 720);
+  }, 450);
 }
 
-// First press → a captain for each team (1 v 1)
+// First press → a captain for each team (1 v 1), announced one after the other
 function pickCaptains() {
   busy = true; btn.disabled = true;
   const cap1 = draftPool[0], cap2 = draftPool[1];
@@ -539,14 +682,13 @@ function pickCaptains() {
   assigned.t2 = [cap2.id];
   picksMade = 1;
   nextTeamKey = 't1';
+  lbl1.style.opacity = '1'; lbl2.style.opacity = '1'; updateLabels();
 
-  placePlayer(cap1.id, 't1', 0, true);
-  setTimeout(() => placePlayer(cap2.id, 't2', 0, true), 200);
-
-  lbl1.style.opacity = '1'; lbl2.style.opacity = '1';
-  updateLabels();
-
-  setTimeout(() => { btn.textContent = '▶  NEXT PLAYER'; btn.disabled = false; busy = false; }, 500 + 200 + 730 + 480);
+  announceAndPlace(cap1.id, 't1', 0, true, () => {
+    announceAndPlace(cap2.id, 't2', 0, true, () => {
+      btn.textContent = '▶  NEXT PLAYER'; btn.disabled = false; busy = false;
+    });
+  });
 }
 
 // Later presses → one player, alternating teams
@@ -556,23 +698,35 @@ function pickNext() {
   const teamKey = nextTeamKey;
   const slot = assigned[teamKey].length;
   assigned[teamKey].push(p.id);
-  placePlayer(p.id, teamKey, slot, false);
   nextTeamKey = teamKey === 't1' ? 't2' : 't1';
   picksMade++;
   updateLabels();
 
-  const done = (assigned.t1.length + assigned.t2.length) >= PLAYERS.length;
-  setTimeout(() => {
-    if (done) { complete = true; dugoutLbl.style.opacity = '0'; btn.textContent = '🔄  DRAW AGAIN'; }
-    else { btn.textContent = '▶  NEXT PLAYER'; }
+  announceAndPlace(p.id, teamKey, slot, false, () => {
+    if ((assigned.t1.length + assigned.t2.length) >= PLAYERS.length) {
+      complete = true; dugoutLbl.style.opacity = '0'; btn.textContent = '🔄  DRAW AGAIN';
+    } else {
+      btn.textContent = '▶  NEXT PLAYER';
+    }
     btn.disabled = false; busy = false;
-  }, 500 + 730 + 480);
+  });
 }
 
 // Reset to a fresh draft (players back in the dugout)
 function resetDraft(reshuffle) {
+  clearTimeout(typeTimer); hideSpot();
+  document.getElementById('spot-head').textContent = '';
+  document.getElementById('spot-text').textContent = '';
   resetPlayers();
-  PLAYERS.forEach(p => { const av = document.getElementById('av-' + p.id); if (av) av.classList.remove('captain'); });
+  PLAYERS.forEach(p => {
+    const el = els[p.id];
+    if (el) {
+      el.style.zIndex = ''; el.classList.remove('spot');
+      const pc = el.querySelector('.pc');
+      if (pc) { pc.style.transition = ''; pc.style.transform = ''; pc.style.animation = ''; }
+    }
+    const av = document.getElementById('av-' + p.id); if (av) av.classList.remove('captain');
+  });
   assigned = { t1: [], t2: [] };
   picksMade = 0; poolIdx = 0; nextTeamKey = 't1'; complete = false; busy = false;
   lbl1.textContent = '🟠 TEAM 1'; lbl2.textContent = 'TEAM 2 🔵';
