@@ -441,7 +441,7 @@ function layout() {
 
   // Pitch fills the (remaining) area width, constrained to a 5-a-side ratio
   // (kept narrower than the area so the dugout/player cards have room either side)
-  const pitchW = Math.min(areaW * 0.78, 760);
+  const pitchW = Math.min(areaW * 0.66, 640);
   const pitchH = Math.round(pitchW * 0.48);
   const pitchLeft = (areaW - pitchW) / 2;
   const pitchTop  = 104;   // clearance so the pitch never covers the title/subtitle
@@ -474,12 +474,13 @@ function layout() {
   const sp = document.getElementById('spotlight');
   let spotX, spotY;
   if (wide) {
-    spotX = areaW + rightCol / 2;
+    spotX = areaW + rightCol / 2;             // avatar sits dead-centre of the column
     spotY = pitchTop + 135;
-    sp.style.left = (areaW + 28) + 'px';
+    const boxW = Math.min(rightCol - 80, 360); // text block narrower than the column…
+    sp.style.left = (spotX - boxW / 2) + 'px'; // …and centred directly under the avatar
     sp.style.top  = (spotY + 100) + 'px';
-    sp.style.width = (rightCol - 68) + 'px';   // extra right-hand margin so text never hugs the edge
-    sp.style.textAlign = 'left';
+    sp.style.width = boxW + 'px';
+    sp.style.textAlign = 'center';
   } else {
     spotX = vw / 2;
     spotY = pitchTop + 95;
