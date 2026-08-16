@@ -155,13 +155,13 @@ body {
 #spot-head {
   color: #ffd700;
   font-weight: 900;
-  font-size: clamp(1.3rem, 2.4vw, 2.1rem);
+  font-size: clamp(1.1rem, 2vw, 1.7rem);
   letter-spacing: 1px;
   text-shadow: 0 2px 10px rgba(0,0,0,0.75);
 }
 #spot-text {
   color: #fff;
-  font-size: clamp(1rem, 1.5vw, 1.35rem);
+  font-size: clamp(0.88rem, 1.25vw, 1.12rem);
   line-height: 1.5;
   margin-top: 14px;
   min-height: 4.5em;
@@ -436,12 +436,12 @@ function layout() {
 
   // On wide screens reserve a right-hand column for the spotlight announcer
   const wide = vw >= 1000;
-  const rightCol = wide ? Math.min(vw * 0.36, 480) : 0;
+  const rightCol = wide ? Math.min(vw * 0.30, 440) : 0;
   const areaW = vw - rightCol;
 
-  // Pitch fills the (remaining) area width, constrained to a 5-a-side ratio
-  // (kept narrower than the area so the dugout/player cards have room either side)
-  const pitchW = Math.min(areaW * 0.66, 640);
+  // Pitch fills almost all of its area — keeping pitchW close to areaW avoids a dead
+  // gap opening up between the pitch and the spotlight column on the right.
+  const pitchW = Math.min(areaW * 0.90, 900);
   const pitchH = Math.round(pitchW * 0.48);
   const pitchLeft = (areaW - pitchW) / 2;
   const pitchTop  = 104;   // clearance so the pitch never covers the title/subtitle
@@ -476,7 +476,7 @@ function layout() {
   if (wide) {
     spotX = areaW + rightCol / 2;             // avatar sits dead-centre of the column
     spotY = pitchTop + 135;
-    const boxW = Math.min(rightCol - 80, 360); // text block narrower than the column…
+    const boxW = Math.min(rightCol - 56, 340); // text block narrower than the column…
     sp.style.left = (spotX - boxW / 2) + 'px'; // …and centred directly under the avatar
     sp.style.top  = (spotY + 100) + 'px';
     sp.style.width = boxW + 'px';
