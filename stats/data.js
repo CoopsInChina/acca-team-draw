@@ -35,10 +35,10 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Pre-season · demo data",
+  updated: "Week 0 · Teams drafted 2026-08-16",
 
   /* ---- Weekly highlight — a manual headline, rewrite it each week ------- */
-  highlight: "🔥 Week 4: Last Proletarians finally lands a Balls of Steel banker — but Hurzeler-ball blanks and sinks the Europe acca. Team Asia stretch clear on EBIT.",
+  highlight: "🪣 Teams are locked in! The Sunshine Bus (captain Roger) vs Team Infantino (captain Garry) — bring on Week 1.",
 
   /* ---- Global settings ------------------------------------------------- */
   stakePerTeamPerWeek: 12.50,   // Total Staked per team = weeks played × this
@@ -46,14 +46,14 @@ window.ACCA_DATA = {
   oddsDisplayDefault:  "decimal",
   showMonkeyDefault:   true,     // Head-to-Head shows Monkey Magic by default
 
-  /* ---- The two fixed teams (real line-ups) ----------------------------- */
+  /* ---- The two fixed teams (drafted 2026-08-16) -------------------------- */
   teams: [
-    { id: "europe", name: "Team Europe", short: "Team EU",   color: "#2f6fed",
-      img: "assets/teams/europe.svg",
-      members: ["lacey", "tim", "mikael", "roger", "niblett"] },
-    { id: "asia",   name: "Team Asia",   short: "Team Asia", color: "#e8641c",
-      img: "assets/teams/asia.svg",
-      members: ["garry", "dewi", "steve", "lincoln", "abby"] },
+    { id: "sunshine",  name: "The Sunshine Bus", short: "Sunshine Bus", color: "#f2a71b",
+      img: "assets/teams/sunshine.svg", captain: "roger",
+      members: ["roger", "lincoln", "lacey", "tim", "abby"] },
+    { id: "infantino", name: "Team Infantino",   short: "Infantino",    color: "#1560bd",
+      img: "assets/teams/infantino.svg", captain: "garry",
+      members: ["garry", "dewi", "mikael", "steve", "niblett"] },
   ],
 
   /* ---- House team: Monkey Magic (automated benchmark; head-to-head only) - */
@@ -74,118 +74,8 @@ window.ACCA_DATA = {
     abby:    { name: "Valley Commando",   init: "VLC", img: "assets/players/abby.png" },
   },
 
-  /* ---- Weekly results (DEMO data, decimal odds) ------------------------ *
-   * expectedReturn = the team's 5-fold acca potential payout that week.     *
-   * monkey = the automated house team's 5 banker picks + acca return.       */
-  weeks: [
-
-    /* ---------- WEEK 1 (DEMO) — Asia: Garibaldi Reds sole loser ---------- */
-    { week: 1, date: "2026-08-16",  note: "DEMO",
-      expectedReturn: { europe: 308.50, asia: 250.60 },
-      bets: {
-        lacey:   { betOn: "Newcastle to win",   odds: 1.60, ballsOfSteel: false, result: "win"  },
-        tim:     { betOn: "Man City to win",    odds: 1.45, ballsOfSteel: false, result: "win"  },
-        mikael:  { betOn: "Everton draw",       odds: 3.20, ballsOfSteel: true,  result: "loss" },
-        roger:   { betOn: "Brighton to win",    odds: 1.90, ballsOfSteel: false, result: "loss" },
-        niblett: { betOn: "Spurs to win",       odds: 1.75, ballsOfSteel: false, result: "draw" },
-        garry:   { betOn: "Man Utd to win",     odds: 1.72, ballsOfSteel: false, result: "win"  },
-        dewi:    { betOn: "Villa over 2.5",     odds: 2.00, ballsOfSteel: false, result: "win"  },
-        steve:   { betOn: "Forest to win",      odds: 2.25, ballsOfSteel: false, result: "loss" },
-        lincoln: { betOn: "Liverpool to win",   odds: 1.40, ballsOfSteel: false, result: "win"  },
-        abby:    { betOn: "Charlton to win",    odds: 1.85, ballsOfSteel: true,  result: "win"  },
-      },
-      monkey: {
-        expectedReturn: 34.47, seed: "9f3a2b10", poolSize: 22,
-        picks: [
-          { pick: "Man City",      odds: 1.20, result: "win",  league: "Premier League" },
-          { pick: "Bayern Munich", odds: 1.15, result: "win",  league: "Bundesliga" },
-          { pick: "Real Madrid",   odds: 1.22, result: "win",  league: "La Liga" },
-          { pick: "Inter",         odds: 1.26, result: "win",  league: "Serie A" },
-          { pick: "PSV",           odds: 1.30, result: "loss", league: "Eredivisie" },
-        ],
-      },
-    },
-
-    /* ---------- WEEK 2 (DEMO) — Europe acca LANDS; Monkey lands too ------- */
-    { week: 2, date: "2026-08-23",  note: "DEMO",
-      expectedReturn: { europe: 124.30, asia: 96.00 },
-      bets: {
-        lacey:   { betOn: "Newcastle over 1.5", odds: 1.55, ballsOfSteel: false, result: "win"  },
-        tim:     { betOn: "Man City to win",    odds: 1.35, ballsOfSteel: false, result: "win"  },
-        mikael:  { betOn: "Arsenal to win",     odds: 1.65, ballsOfSteel: false, result: "win"  },
-        roger:   { betOn: "Brighton to win",    odds: 1.80, ballsOfSteel: false, result: "win"  },
-        niblett: { betOn: "Spurs to win",       odds: 1.60, ballsOfSteel: false, result: "win"  },
-        garry:   { betOn: "Man Utd to win",     odds: 2.10, ballsOfSteel: false, result: "loss" },
-        dewi:    { betOn: "Villa to win",       odds: 1.90, ballsOfSteel: false, result: "loss" },
-        steve:   { betOn: "Forest to win",      odds: 2.40, ballsOfSteel: true,  result: "loss" },
-        lincoln: { betOn: "Liverpool -1",       odds: 2.30, ballsOfSteel: true,  result: "win"  },
-        abby:    { betOn: "Charlton BTTS",      odds: 1.70, ballsOfSteel: false, result: "draw" },
-      },
-      monkey: {
-        expectedReturn: 40.80, seed: "1c4d7e22", poolSize: 25,
-        picks: [
-          { pick: "Liverpool", odds: 1.25, result: "win", league: "Premier League" },
-          { pick: "Barcelona", odds: 1.28, result: "win", league: "La Liga" },
-          { pick: "Bayern Munich", odds: 1.18, result: "win", league: "Bundesliga" },
-          { pick: "Juventus",  odds: 1.30, result: "win", league: "Serie A" },
-          { pick: "Ajax",      odds: 1.33, result: "win", league: "Eredivisie" },
-        ],
-      },
-    },
-
-    /* ---------- WEEK 3 (DEMO) — Asia acca LANDS ---------- */
-    { week: 3, date: "2026-08-30",  note: "DEMO",
-      expectedReturn: { europe: 88.00, asia: 345.40 },
-      bets: {
-        lacey:   { betOn: "Newcastle to win",   odds: 1.95, ballsOfSteel: false, result: "loss" },
-        tim:     { betOn: "Man City to win",    odds: 1.50, ballsOfSteel: false, result: "win"  },
-        mikael:  { betOn: "Palace to win",      odds: 4.00, ballsOfSteel: true,  result: "loss" },
-        roger:   { betOn: "Brighton to win",    odds: 2.20, ballsOfSteel: false, result: "loss" },
-        niblett: { betOn: "Spurs over 2.5",     odds: 1.85, ballsOfSteel: false, result: "loss" },
-        garry:   { betOn: "Man Utd BTTS",       odds: 1.72, ballsOfSteel: false, result: "win"  },
-        dewi:    { betOn: "Villa to win",       odds: 2.00, ballsOfSteel: false, result: "win"  },
-        steve:   { betOn: "Forest to win",      odds: 2.50, ballsOfSteel: false, result: "win"  },
-        lincoln: { betOn: "Liverpool to win",   odds: 1.53, ballsOfSteel: false, result: "win"  },
-        abby:    { betOn: "Charlton to win",    odds: 2.10, ballsOfSteel: false, result: "win"  },
-      },
-      monkey: {
-        expectedReturn: 35.80, seed: "7b2f9c01", poolSize: 19,
-        picks: [
-          { pick: "Man City",    odds: 1.22, result: "win",  league: "Premier League" },
-          { pick: "Real Madrid", odds: 1.20, result: "loss", league: "La Liga" },
-          { pick: "Inter",       odds: 1.24, result: "win",  league: "Serie A" },
-          { pick: "Bayern Munich", odds: 1.16, result: "win", league: "Bundesliga" },
-          { pick: "Feyenoord",   odds: 1.36, result: "loss", league: "Eredivisie" },
-        ],
-      },
-    },
-
-    /* ---------- WEEK 4 (DEMO) — Europe: Hurzeler-ball sole loser ---------- */
-    { week: 4, date: "2026-09-13",  note: "DEMO",
-      expectedReturn: { europe: 150.00, asia: 110.00 },
-      bets: {
-        lacey:   { betOn: "Newcastle to win",   odds: 1.70, ballsOfSteel: false, result: "win"  },
-        tim:     { betOn: "Man City to win",    odds: 1.40, ballsOfSteel: false, result: "win"  },
-        mikael:  { betOn: "Arsenal draw",       odds: 3.40, ballsOfSteel: true,  result: "win"  },
-        roger:   { betOn: "Brighton to win",    odds: 2.00, ballsOfSteel: false, result: "loss" },
-        niblett: { betOn: "Spurs to win",       odds: 1.65, ballsOfSteel: false, result: "win"  },
-        garry:   { betOn: "Man Utd to win",     odds: 1.80, ballsOfSteel: false, result: "win"  },
-        dewi:    { betOn: "Villa to win",       odds: 1.75, ballsOfSteel: false, result: "loss" },
-        steve:   { betOn: "Forest draw",        odds: 3.10, ballsOfSteel: false, result: "draw" },
-        lincoln: { betOn: "Liverpool to win",   odds: 1.45, ballsOfSteel: false, result: "win"  },
-        abby:    { betOn: "Charlton to win",    odds: 1.95, ballsOfSteel: false, result: "loss" },
-      },
-      monkey: {
-        expectedReturn: 37.21, seed: "3e8a11ff", poolSize: 28,
-        picks: [
-          { pick: "Man City",      odds: 1.18, result: "win",  league: "Premier League" },
-          { pick: "Bayern Munich", odds: 1.14, result: "win",  league: "Bundesliga" },
-          { pick: "Barcelona",     odds: 1.30, result: "win",  league: "La Liga" },
-          { pick: "Juventus",      odds: 1.28, result: "draw", league: "Serie A" },
-          { pick: "PSV",           odds: 1.33, result: "win",  league: "Eredivisie" },
-        ],
-      },
-    },
-
-  ],
+  /* ---- Weekly results ---------------------------------------------------- *
+   * Week 0 — teams are drafted but no bets placed yet. Add the first        *
+   * { week: 1, ... } block (via stats/admin/) once fixtures kick off.        */
+  weeks: [],
 };
