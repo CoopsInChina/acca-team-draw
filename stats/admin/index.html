@@ -320,8 +320,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   function loadNew() {
     $('wk-num').value = nextWeekNum();
     $('wk-date').value = new Date().toISOString().slice(0, 10);
-    $('er-europe').value = '';
-    $('er-asia').value = '';
+    TEAMS.forEach(t => { $('er-' + t.id).value = ''; });
     $('wk-highlight').value = DATA.highlight || '';
     ORDER.forEach(id => { $(`bet-${id}`).value=''; $(`odds-${id}`).value=''; $(`bos-${id}`).checked=false; const r=$(`res-${id}`); r.value='pending'; paintResult(id,'pending'); });
     $('btn-delete').style.display = 'none';
@@ -334,8 +333,9 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     if (!w) return loadNew();
     $('wk-num').value = w.week;
     $('wk-date').value = w.date || '';
-    $('er-europe').value = (w.expectedReturn && w.expectedReturn.europe != null) ? w.expectedReturn.europe : '';
-    $('er-asia').value   = (w.expectedReturn && w.expectedReturn.asia   != null) ? w.expectedReturn.asia   : '';
+    TEAMS.forEach(t => {
+      $('er-' + t.id).value = (w.expectedReturn && w.expectedReturn[t.id] != null) ? w.expectedReturn[t.id] : '';
+    });
     $('wk-highlight').value = DATA.highlight || '';
     loadedNote = w.note || null;
     ORDER.forEach(id => {
