@@ -61,6 +61,7 @@ button { font-family:inherit; font-weight:800; letter-spacing:1px; border:none; 
 .btn-apply { background:#2a3550; color:#cdd7ea; border:1px solid var(--line); }
 .btn-save { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#111; transition:background .2s, transform .2s; }
 .btn-save.btn-saved { background:linear-gradient(135deg,#2ecc71,#1fa25a); color:#fff; transform:scale(1.04); }
+.btn-save.btn-pressed { transform:scale(0.92); filter:brightness(1.35); box-shadow:0 0 0 4px rgba(255,215,0,0.35); }
 .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--line); }
 .btn-danger { background:transparent; color:var(--loss); border:1px solid rgba(231,76,60,0.4); }
 button:hover { filter:brightness(1.08); }
@@ -477,8 +478,12 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     if (monkeyGenerating) { toast('Still pulling Monkey picks — wait for that to finish first', false, 4000); return; }
     const btn = $('btn-save');
     const originalLabel = btn ? btn.textContent : '';
-    const text = serialize(DATA);
+    // Everything below is inside the try — including serialize(DATA) itself. An
+    // exception thrown before the try (as odds/text prep used to be) is an
+    // unhandled rejection in an async function: the browser shows the user
+    // NOTHING at all, just a silent console error. That's the bug this closes.
     try {
+      const text = serialize(DATA);
       const r = await fetch('/api/save-data', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text });
       const j = await r.json();
       if (j.ok) {
@@ -494,7 +499,10 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
         toast('Save failed: ' + j.error, false, 6000);
       }
     } catch (e) {
-      toast('No server — use Download instead', false, 6000);
+      // Covers both a network failure (server not running) AND any bug in
+      // serialize()/etc — either way the user always sees something concrete.
+      toast('Save error: ' + (e && e.message ? e.message : 'no server running'), false, 7000);
+      console.error('Save failed:', e);
     }
   }
   function download() {
@@ -518,7 +526,21 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
   // ---- Wire up -------------------------------------------------------------
   $('btn-apply').addEventListener('click', applyWeek);
-  $('btn-save').addEventListener('click', () => { applyWeek(); save(); });
+  $('btn-save').addEventListener('click', () => {
+    const b = $('btn-save');
+    // Instant physical-button reaction the moment the click registers — fires
+    // before anything else runs, so a click always LOOKS like it did something,
+    // even in the split second before the toast/save-flash can appear.
+    b.classList.add('btn-pressed');
+    setTimeout(() => b.classList.remove('btn-pressed'), 220);
+    try {
+      applyWeek();
+      save();
+    } catch (err) {
+      toast('Something went wrong: ' + (err && err.message ? err.message : err), false, 8000);
+      console.error('Save click failed:', err);
+    }
+  });
   $('btn-download').addEventListener('click', () => { applyWeek(); download(); });
   $('btn-copy').addEventListener('click', () => { applyWeek(); copy(); });
   $('btn-delete').addEventListener('click', deleteWeek);
