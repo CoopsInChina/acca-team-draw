@@ -62,6 +62,10 @@ button { font-family:inherit; font-weight:800; letter-spacing:1px; border:none; 
 .btn-save { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#111; transition:background .2s, transform .2s; }
 .btn-save.btn-saved { background:linear-gradient(135deg,#2ecc71,#1fa25a); color:#fff; transform:scale(1.04); }
 .btn-save.btn-pressed { transform:scale(0.92); filter:brightness(1.35); box-shadow:0 0 0 4px rgba(255,215,0,0.35); }
+.btn-publish { background:linear-gradient(135deg,#7d3cc9,#5a2a99); color:#fff; transition:background .2s, transform .2s; }
+.btn-publish.btn-pressed { transform:scale(0.92); filter:brightness(1.35); box-shadow:0 0 0 4px rgba(125,60,201,0.35); }
+.btn-publish.btn-published { background:linear-gradient(135deg,#2ecc71,#1fa25a); transform:scale(1.04); }
+.btn-publish:disabled { opacity:0.45; cursor:default; }
 .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--line); }
 .btn-danger { background:transparent; color:var(--loss); border:1px solid rgba(231,76,60,0.4); }
 button:hover { filter:brightness(1.08); }
@@ -164,6 +168,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 <div class="actionbar">
   <button class="btn-apply" id="btn-apply">✓ Apply week</button>
   <button class="btn-save" id="btn-save">💾 Save to data.js</button>
+  <button class="btn-publish" id="btn-publish">🚀 Publish to live site</button>
   <button class="btn-ghost" id="btn-download">⬇ Download</button>
   <button class="btn-ghost" id="btn-copy">📋 Copy</button>
   <button class="btn-danger" id="btn-delete">🗑 Delete week</button>
@@ -190,6 +195,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   modeEl.textContent = isServer ? 'Server · saves to file' : 'File · download only';
   modeEl.className = 'mode ' + (isServer ? 'server' : 'file');
   document.getElementById('btn-save').style.display = isServer ? '' : 'none';
+  document.getElementById('btn-publish').style.display = isServer ? '' : 'none';
 
   const $ = id => document.getElementById(id);
   let dirty = false;
@@ -296,13 +302,15 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     }
   }
 
-  // While Generate is in flight, Save is blocked — saving mid-request would silently
-  // write the week WITHOUT the monkey picks (the fetch hasn't resolved yet).
+  // While Generate is in flight, Save/Publish are blocked — saving mid-request
+  // would silently write the week WITHOUT the monkey picks (fetch unresolved).
   function syncSaveGuard() {
-    const b = $('btn-save');
-    if (!b) return;
-    b.disabled = monkeyGenerating;
-    b.title = monkeyGenerating ? 'Waiting for Monkey picks to finish generating…' : '';
+    ['btn-save', 'btn-publish'].forEach(id => {
+      const b = $(id);
+      if (!b) return;
+      b.disabled = monkeyGenerating;
+      b.title = monkeyGenerating ? 'Waiting for Monkey picks to finish generating…' : '';
+    });
   }
 
   // ---- Week selector --------------------------------------------------------
@@ -475,7 +483,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
   // ---- Save / download / copy ----------------------------------------------
   async function save() {
-    if (monkeyGenerating) { toast('Still pulling Monkey picks — wait for that to finish first', false, 4000); return; }
+    if (monkeyGenerating) { toast('Still pulling Monkey picks — wait for that to finish first', false, 4000); return false; }
     const btn = $('btn-save');
     const originalLabel = btn ? btn.textContent : '';
     // Everything below is inside the try — including serialize(DATA) itself. An
@@ -495,14 +503,57 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
           btn.textContent = '✓ Saved!'; btn.classList.add('btn-saved');
           setTimeout(() => { btn.textContent = originalLabel; btn.classList.remove('btn-saved'); }, 1800);
         }
+        return true;
       } else {
         toast('Save failed: ' + j.error, false, 6000);
+        return false;
       }
     } catch (e) {
       // Covers both a network failure (server not running) AND any bug in
       // serialize()/etc — either way the user always sees something concrete.
       toast('Save error: ' + (e && e.message ? e.message : 'no server running'), false, 7000);
       console.error('Save failed:', e);
+      return false;
+    }
+  }
+
+  // ---- Publish: save, then commit + push stats/data.js to GitHub -----------
+  async function publish() {
+    if (monkeyGenerating) { toast('Still pulling Monkey picks — wait for that to finish first', false, 4000); return; }
+    const btn = $('btn-publish');
+    const originalLabel = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '💾 Saving…'; }
+
+    const saved = await save();
+    if (!saved) {
+      if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+      toast('Publish stopped — save it first (see the error above)', false, 5000);
+      return;
+    }
+
+    if (btn) btn.textContent = '🚀 Publishing…';
+    const wk = parseInt($('wk-num').value, 10);
+    const message = 'Week ' + (wk || '?') + ' update via admin editor — ' + new Date().toISOString().slice(0, 10);
+    try {
+      const r = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+      const j = await r.json();
+      if (j.ok && j.published) {
+        toast('🚀 ' + j.message, true, 6000);
+        if (btn) { btn.textContent = '✓ Published!'; btn.classList.add('btn-published'); }
+      } else if (j.ok) {
+        toast(j.message, true, 4000);   // "already up to date"
+        if (btn) btn.textContent = originalLabel;
+      } else {
+        toast('Publish failed: ' + j.error, false, 8000);
+        if (btn) btn.textContent = originalLabel;
+      }
+    } catch (e) {
+      toast('Publish error: ' + (e && e.message ? e.message : 'no server running'), false, 8000);
+      if (btn) btn.textContent = originalLabel;
+    } finally {
+      if (btn) {
+        setTimeout(() => { btn.disabled = false; btn.textContent = originalLabel; btn.classList.remove('btn-published'); }, 2200);
+      }
     }
   }
   function download() {
@@ -539,6 +590,18 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     } catch (err) {
       toast('Something went wrong: ' + (err && err.message ? err.message : err), false, 8000);
       console.error('Save click failed:', err);
+    }
+  });
+  $('btn-publish').addEventListener('click', () => {
+    const b = $('btn-publish');
+    b.classList.add('btn-pressed');
+    setTimeout(() => b.classList.remove('btn-pressed'), 220);
+    try {
+      applyWeek();
+      publish();
+    } catch (err) {
+      toast('Something went wrong: ' + (err && err.message ? err.message : err), false, 8000);
+      console.error('Publish click failed:', err);
     }
   });
   $('btn-download').addEventListener('click', () => { applyWeek(); download(); });
