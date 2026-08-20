@@ -59,7 +59,8 @@ input[type=number]{ font-variant-numeric:tabular-nums; }
   padding:12px 16px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; z-index:50; backdrop-filter:blur(6px); }
 button { font-family:inherit; font-weight:800; letter-spacing:1px; border:none; border-radius:22px; padding:11px 20px; cursor:pointer; font-size:0.8rem; }
 .btn-apply { background:#2a3550; color:#cdd7ea; border:1px solid var(--line); }
-.btn-save { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#111; }
+.btn-save { background:linear-gradient(135deg,#ffd700,#ff8c00); color:#111; transition:background .2s, transform .2s; }
+.btn-save.btn-saved { background:linear-gradient(135deg,#2ecc71,#1fa25a); color:#fff; transform:scale(1.04); }
 .btn-ghost { background:transparent; color:var(--muted); border:1px solid var(--line); }
 .btn-danger { background:transparent; color:var(--loss); border:1px solid rgba(231,76,60,0.4); }
 button:hover { filter:brightness(1.08); }
@@ -227,6 +228,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   const STAKE = DATA.stakePerTeamPerWeek || 12.50;
   const HOUSE = DATA.houseTeam || null;
   let monkeyState = null;   // { seed, poolSize, expectedReturn, picks:[{pick,odds,result,league}] }
+  let monkeyGenerating = false;   // true while a Generate request is in flight — blocks Save
 
   function computeMonkeyER(picks) {
     const prod = picks.reduce((a, p) => a * (Number(p.odds) || 1), 1);
@@ -259,6 +261,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   async function generateMonkey() {
     if (monkeyState && monkeyState.picks.length) { toast('Already generated — locked for this week', false); return; }
     const gen = $('mk-generate'); gen.disabled = true; gen.textContent = '⏳ pulling odds…';
+    monkeyGenerating = true; syncSaveGuard();
     const mock = new URLSearchParams(location.search).get('mock') === '1';   // ?mock=1 → test with sample data
     let r;
     try {
@@ -267,6 +270,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       // fetch itself threw — no server answering at all (not a key/data problem)
       gen.disabled = false; gen.textContent = '🐒 Generate picks';
       toast('No local server running — start it with: node stats/admin/serve.js', false, 6000);
+      monkeyGenerating = false; syncSaveGuard();
       return;
     }
     try {
@@ -286,7 +290,18 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       // or "Only 3 banker(s) found under 1.4 — need at least 5.") without guessing
       gen.disabled = false; gen.textContent = '🐒 Generate picks';
       toast(e.message, false, 6000);
+    } finally {
+      monkeyGenerating = false; syncSaveGuard();
     }
+  }
+
+  // While Generate is in flight, Save is blocked — saving mid-request would silently
+  // write the week WITHOUT the monkey picks (the fetch hasn't resolved yet).
+  function syncSaveGuard() {
+    const b = $('btn-save');
+    if (!b) return;
+    b.disabled = monkeyGenerating;
+    b.title = monkeyGenerating ? 'Waiting for Monkey picks to finish generating…' : '';
   }
 
   // ---- Week selector --------------------------------------------------------
@@ -459,14 +474,27 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
   // ---- Save / download / copy ----------------------------------------------
   async function save() {
+    if (monkeyGenerating) { toast('Still pulling Monkey picks — wait for that to finish first', false, 4000); return; }
+    const btn = $('btn-save');
+    const originalLabel = btn ? btn.textContent : '';
     const text = serialize(DATA);
     try {
       const r = await fetch('/api/save-data', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: text });
       const j = await r.json();
-      if (j.ok) { dirty = false; document.body.classList.remove('dirty'); toast('Saved to stats/data.js ✓', true); }
-      else toast('Save failed: ' + j.error, false);
+      if (j.ok) {
+        dirty = false; document.body.classList.remove('dirty');
+        toast('Saved to stats/data.js ✓', true, 4000);
+        // Flash confirmation right on the button itself — easy to miss a small toast
+        // at the top of a long page, hard to miss the button you just clicked changing.
+        if (btn) {
+          btn.textContent = '✓ Saved!'; btn.classList.add('btn-saved');
+          setTimeout(() => { btn.textContent = originalLabel; btn.classList.remove('btn-saved'); }, 1800);
+        }
+      } else {
+        toast('Save failed: ' + j.error, false, 6000);
+      }
     } catch (e) {
-      toast('No server — use Download instead', false);
+      toast('No server — use Download instead', false, 6000);
     }
   }
   function download() {
