@@ -178,11 +178,24 @@ It runs on your machine and is never exposed by GitHub Pages.
 
 A form that writes `stats/data.js` for you, so you never hand‑edit it.
 
+**Easiest way to start it — double‑click [`acca-editor.command`](acca-editor.command)**
+in Finder (repo root). It starts the server and opens the editor in your
+browser automatically; leave the Terminal window it opens running while you
+work, and close it (or press Ctrl+C) when you're done. First run on macOS may
+need a right‑click → **Open** to get past Gatekeeper's unsigned‑script warning.
+
+Or start it manually:
+
 ```bash
 node stats/admin/serve.js
 ```
 
 Then open **http://localhost:4599/stats/admin/**.
+
+> A webpage — including the live GitHub Pages site — can never start this
+> server itself; browsers deliberately block a page from launching programs
+> on your machine. The editor always has to be started locally, one way or
+> the other, by you.
 
 `serve.js` is a tiny zero‑dependency Node server that:
 - serves the repo locally (so the editor and assets load),
@@ -252,6 +265,8 @@ Config (leagues, the 1.40 threshold, home‑only, pool cap, region) lives in the
 ## 5. Updating each week (the full loop)
 
 ```bash
+open acca-editor.command                  # or double-click it in Finder
+# — or, without the launcher —
 node stats/admin/serve.js                 # start the editor
 # → edit in the browser, Save
 git add -A
