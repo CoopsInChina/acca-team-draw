@@ -26,6 +26,7 @@ const path = require('path');
 
 // ---- Config ----------------------------------------------------------------
 const CONFIG = {
+  minOdds:   1.10,     // the pick must be priced at this or above (no near-certainties)
   threshold: 1.40,     // the pick must be priced strictly under this
   homeOnly:  true,     // only home teams are eligible (home win under 1.40)
   poolCap:   50,       // record at most this many bankers (shortest-priced)
@@ -119,7 +120,7 @@ function buildPool(events, league, win) {
     const t = new Date(ev.commence_time);
     if (win && (t < win.from || t > win.to)) return;
     const fav = candidate(ev);
-    if (!fav || !(fav.odds < CONFIG.threshold)) return;
+    if (!fav || fav.odds < CONFIG.minOdds || !(fav.odds < CONFIG.threshold)) return;
     out.push({
       gameId: ev.id,
       league: league.label,
@@ -154,13 +155,16 @@ async function generate(opts = {}) {
   const seedNum = opts.seed != null ? (parseInt(opts.seed, 16) >>> 0) : (require('crypto').randomBytes(4).readUInt32BE(0));
   const rng = mulberry32(seedNum);
 
-  let pool = [];
+  // Collect the raw events per league once — used for the primary home pool and,
+  // if needed, the away-favourite backfill below (no extra API calls).
+  const rawLeagues = [];
   let remaining = null;
   const leaguesUsed = [];
 
   if (opts.mock) {
-    const mock = require('./monkey.mock.js')(win);
-    mock.forEach(({ league, events }) => { leaguesUsed.push(league.label); pool = pool.concat(buildPool(events, league, win)); });
+    require('./monkey.mock.js')(win).forEach(({ league, events }) => {
+      leaguesUsed.push(league.label); rawLeagues.push({ league, events });
+    });
   } else {
     const key = opts.key || resolveKey();
     if (!key) throw new Error('No API key. Set ODDS_API_KEY or create stats/admin/oddsapi.key (see --help).');
@@ -169,20 +173,50 @@ async function generate(opts = {}) {
         const { data, remaining: rem } = await fetchLeague(league, key);
         if (rem != null) remaining = rem;
         leaguesUsed.push(league.label);
-        pool = pool.concat(buildPool(data, league, win));
+        rawLeagues.push({ league, events: data });
       } catch (e) {
         console.error(`  ! ${league.label}: ${e.message}`);
       }
     }
   }
 
-  // sort shortest-priced first, cap the recorded pool
+  // Primary pool: home favourites only (the standard rule).
+  let pool = rawLeagues.flatMap(({ league, events }) => buildPool(events, league, win));
   pool.sort((a, b) => a.odds - b.odds);
+  const homeFound = pool.length;
+
+  // Backup: if home-only can't reach the required 5, top up with the next-best
+  // AWAY favourites in the same odds range (only for games not already used).
+  let backupFound = 0;
+  if (pool.length < CONFIG.pick) {
+    const used = new Set(pool.map(p => p.gameId));
+    const away = [];
+    rawLeagues.forEach(({ league, events }) => {
+      (events || []).forEach(ev => {
+        if (used.has(ev.id)) return;
+        const t = new Date(ev.commence_time);
+        if (win && (t < win.from || t > win.to)) return;
+        const { away: a } = teamOdds(ev);
+        if (!a || a.odds < CONFIG.minOdds || !(a.odds < CONFIG.threshold)) return;
+        away.push({
+          gameId: ev.id, league: league.label, country: league.country, commence: ev.commence_time,
+          home: ev.home_team, away: ev.away_team, pick: ev.away_team, side: 'away',
+          odds: Math.round(a.odds * 100) / 100, books: a.books, backup: true,
+        });
+      });
+    });
+    away.sort((a, b) => a.odds - b.odds);
+    const needed = CONFIG.pick - pool.length;
+    const topUp = away.slice(0, Math.max(needed, 0));
+    backupFound = topUp.length;
+    pool = pool.concat(topUp).sort((a, b) => a.odds - b.odds);
+  }
+
   const fullSize = pool.length;
   pool = pool.slice(0, CONFIG.poolCap);
 
   if (pool.length < CONFIG.pick)
-    throw new Error(`Only ${pool.length} banker(s) found under ${CONFIG.threshold} — need at least ${CONFIG.pick}.`);
+    throw new Error(`Only ${pool.length} banker(s) found between ${CONFIG.minOdds} and ${CONFIG.threshold} (home ${homeFound}, away backup ${backupFound}) — need at least ${CONFIG.pick}.`);
 
   const picks = shuffle(pool, rng).slice(0, CONFIG.pick);
 
@@ -191,8 +225,10 @@ async function generate(opts = {}) {
     source: opts.mock ? 'mock' : 'the-odds-api v4',
     apiRequestsRemaining: remaining,
     window: { from: win.from.toISOString(), to: win.to.toISOString() },
+    minOdds: CONFIG.minOdds,
     threshold: CONFIG.threshold,
     leagues: leaguesUsed,
+    homeFound, backupFound,          // how many of the qualifiers were home vs away-backup
     qualifyingFound: fullSize,      // total bankers found (before the 50 cap)
     poolSize: pool.length,          // recorded pool (<= 50)
     seed: seedNum.toString(16).padStart(8, '0'),
@@ -215,10 +251,10 @@ if (require.main === module) {
   generate(opts).then(result => {
     console.log(`\n  🐒 Monkey Magic — ${result.source}`);
     console.log(`  weekend ${result.window.from.slice(0,10)} → ${result.window.to.slice(0,10)} · seed ${result.seed}`);
-    console.log(`  bankers under ${result.threshold}: ${result.qualifyingFound} found, ${result.poolSize} in pool`);
+    console.log(`  bankers ${result.minOdds}–${result.threshold}: ${result.qualifyingFound} found (home ${result.homeFound}, away backup ${result.backupFound}), ${result.poolSize} in pool`);
     if (result.apiRequestsRemaining != null) console.log(`  API requests remaining: ${result.apiRequestsRemaining}`);
     console.log('\n  THE 5 PICKS:');
-    result.picks.forEach((p, i) => console.log(`   ${i + 1}. ${p.pick}  @ ${p.odds}  (${p.league}: ${p.home} v ${p.away})`));
+    result.picks.forEach((p, i) => console.log(`   ${i + 1}. ${p.pick}  @ ${p.odds}  (${p.league}: ${p.home} v ${p.away})${p.backup ? '  [away backup]' : ''}`));
     if (opts.out) { fs.writeFileSync(opts.out, JSON.stringify(result, null, 2)); console.log(`\n  written → ${opts.out}`); }
     console.log('');
   }).catch(err => { console.error('\n  ✘ ' + err.message + '\n'); process.exit(1); });

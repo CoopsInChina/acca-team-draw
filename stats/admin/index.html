@@ -85,6 +85,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 .mkrow { display:grid; grid-template-columns: 1fr 150px 70px 116px; gap:10px; align-items:center; padding:8px 0; border-top:1px solid rgba(255,255,255,0.05); }
 .mkrow:first-of-type { border-top:none; }
 .mk-pick { font-weight:700; color:#e0cdf5; }
+.mk-away-tag { font-size:0.6rem; letter-spacing:1px; font-weight:800; color:#111; background:#e0a800; border-radius:8px; padding:1px 6px; margin-left:4px; vertical-align:middle; }
 .mk-league { color:var(--muted); font-size:0.8rem; }
 .mk-odds { font-variant-numeric:tabular-nums; text-align:right; color:var(--muted); }
 .dim { color:var(--muted); }
@@ -244,7 +245,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     status.textContent = 'locked · seed ' + monkeyState.seed;
     wrap.innerHTML = monkeyState.picks.map((p, i) => `
       <div class="mkrow">
-        <div class="mk-pick">${p.pick}</div>
+        <div class="mk-pick">${p.pick}${p.backup ? ' <span class="mk-away-tag">AWAY</span>' : ''}</div>
         <div class="mk-league">${p.league || ''}</div>
         <div class="mk-odds">${Number(p.odds).toFixed(2)}</div>
         <select id="mk-res-${i}">${RESULTS.map(r => `<option value="${r}"${r === (p.result || 'pending') ? ' selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select>
@@ -259,22 +260,32 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     if (monkeyState && monkeyState.picks.length) { toast('Already generated — locked for this week', false); return; }
     const gen = $('mk-generate'); gen.disabled = true; gen.textContent = '⏳ pulling odds…';
     const mock = new URLSearchParams(location.search).get('mock') === '1';   // ?mock=1 → test with sample data
+    let r;
     try {
-      const r = await fetch('/api/monkey' + (mock ? '?mock=1' : ''));
+      r = await fetch('/api/monkey' + (mock ? '?mock=1' : ''));
+    } catch (netErr) {
+      // fetch itself threw — no server answering at all (not a key/data problem)
+      gen.disabled = false; gen.textContent = '🐒 Generate picks';
+      toast('No local server running — start it with: node stats/admin/serve.js', false, 6000);
+      return;
+    }
+    try {
       const j = await r.json();
       if (!r.ok || j.error) throw new Error(j.error || ('HTTP ' + r.status));
       if (!j.picks || j.picks.length < 5) throw new Error('only ' + (j.picks ? j.picks.length : 0) + ' picks returned');
       monkeyState = {
         seed: j.seed, poolSize: j.poolSize,
-        picks: j.picks.map(p => ({ pick: p.pick, odds: Number(p.odds), result: 'pending', league: p.league || '' })),
+        picks: j.picks.map(p => ({ pick: p.pick, odds: Number(p.odds), result: 'pending', league: p.league || '', backup: !!p.backup })),
         expectedReturn: 0,
       };
       monkeyState.expectedReturn = computeMonkeyER(monkeyState.picks);
       renderMonkey(); markDirty(); refreshPreview();
       toast('Monkey picks generated' + (mock ? ' (MOCK)' : '') + ' · seed ' + j.seed, true);
     } catch (e) {
+      // server responded — surface its actual reason verbatim (e.g. "No API key…"
+      // or "Only 3 banker(s) found under 1.4 — need at least 5.") without guessing
       gen.disabled = false; gen.textContent = '🐒 Generate picks';
-      toast('Generate needs the local server + API key — ' + e.message, false);
+      toast(e.message, false, 6000);
     }
   }
 
@@ -321,7 +332,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     $('btn-delete').style.display = '';
     monkeyState = w.monkey ? {
       seed: w.monkey.seed, poolSize: w.monkey.poolSize, expectedReturn: Number(w.monkey.expectedReturn) || 0,
-      picks: (w.monkey.picks || []).map(p => ({ pick: p.pick, odds: Number(p.odds), result: p.result || 'pending', league: p.league || '' })),
+      picks: (w.monkey.picks || []).map(p => ({ pick: p.pick, odds: Number(p.odds), result: p.result || 'pending', league: p.league || '', backup: !!p.backup })),
     } : null;
     renderMonkey();
   }
@@ -354,7 +365,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       week.monkey = {
         expectedReturn: computeMonkeyER(monkeyState.picks),
         seed: monkeyState.seed, poolSize: monkeyState.poolSize,
-        picks: monkeyState.picks.map(p => ({ pick: p.pick, odds: Number(p.odds) || 0, result: p.result || 'pending', league: p.league || '' })),
+        picks: monkeyState.picks.map(p => ({ pick: p.pick, odds: Number(p.odds) || 0, result: p.result || 'pending', league: p.league || '', backup: !!p.backup })),
       };
     }
     return week;
@@ -435,7 +446,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
         o += ',\n      monkey: {\n';
         o += `        expectedReturn: ${Number(m.expectedReturn) || 0}, seed: ${q(m.seed)}, poolSize: ${Number(m.poolSize) || m.picks.length},\n`;
         o += '        picks: [\n';
-        m.picks.forEach(p => { o += `          { pick: ${q(p.pick)}, odds: ${Number(p.odds) || 0}, result: ${q(p.result || 'pending')}, league: ${q(p.league || '')} },\n`; });
+        m.picks.forEach(p => { o += `          { pick: ${q(p.pick)}, odds: ${Number(p.odds) || 0}, result: ${q(p.result || 'pending')}, league: ${q(p.league || '')}${p.backup ? ', backup: true' : ''} },\n`; });
         o += '        ],\n      }\n    },\n';
       } else {
         o += '\n    },\n';
@@ -472,9 +483,9 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
   // ---- Toast ---------------------------------------------------------------
   let toastT;
-  function toast(msg, ok) {
+  function toast(msg, ok, duration) {
     const t = $('toast'); t.textContent = msg; t.className = 'toast show ' + (ok ? 'ok' : 'err');
-    clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast ' + (ok ? 'ok' : 'err'); }, 2600);
+    clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast ' + (ok ? 'ok' : 'err'); }, duration || 2600);
   }
 
   // ---- Wire up -------------------------------------------------------------

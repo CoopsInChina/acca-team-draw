@@ -122,6 +122,7 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
 .bet-row .bp .mini-av { width: 24px; height: 24px; font-size: 8px; flex: 0 0 24px; }
 .bet-sel { color: #cdd7ea; }
 .bet-sel .bos { color: var(--gold); font-size: 0.68rem; font-weight: 800; margin-left: 4px; }
+.mk-away-tag { font-size: 0.58rem; letter-spacing: 1px; font-weight: 800; color: #111; background: var(--draw); border-radius: 8px; padding: 1px 6px; margin-left: 4px; vertical-align: middle; }
 .bet-sel .long { color: var(--eu); font-size: 0.62rem; font-weight: 800; margin-left: 4px; letter-spacing: .5px; }
 .bet-odds { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
 .res { text-align: center; font-size: 0.64rem; font-weight: 900; letter-spacing: 1px; padding: 3px 0; border-radius: 5px; }
@@ -586,7 +587,7 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
         const mkRows = picks.map(p => {
           const r = (p.result || 'pending').toLowerCase();
           return `<div class="bet-row mk">
-            <div class="bp"><span class="mk-dot">🐒</span>${p.pick}</div>
+            <div class="bp"><span class="mk-dot">🐒</span>${p.pick}${p.backup ? ' <span class="mk-away-tag">AWAY</span>' : ''}</div>
             <div class="bet-sel">${p.league || ''}</div>
             <div class="bet-odds">${fmtOdds(p.odds)}</div>
             <div class="res ${r}">${r.toUpperCase()}</div></div>`;
