@@ -21,7 +21,7 @@ window.ACCA_DATA = {
       img: "assets/teams/SunshinePhoto.jpg",
       members: ["roger", "lincoln", "lacey", "tim", "abby"] },
     { id: "infantino", name: "Team Infantino", short: "Infantino", color: "#1560bd",
-      img: "assets/teams/InfantinoPhoto.png",
+      img: "assets/teams/InfantinoPhotov2.jpg",
       members: ["garry", "dewi", "mikael", "steve", "niblett"] },
   ],
 

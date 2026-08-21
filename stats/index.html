@@ -152,15 +152,19 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
 .highlight-banner .hl-txt { font-size: 0.95rem; font-weight: 600; color: #ffe9a6; line-height: 1.4; }
 
 /* ── Team photo banner ── */
-.team-banner { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.team-banner .tb-panel { position: relative; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; border: 1px solid var(--card-line); background: linear-gradient(160deg, #1a2744, #0d1117); }
+/* Each card keeps its OWN photo's natural aspect ratio at a shared height —
+   a tall photo renders narrow, a wide photo renders wide, neither is cropped.
+   Forcing both into one shared shape always butchers whichever photo's
+   orientation doesn't match it. */
+.team-banner { display: flex; gap: 14px; justify-content: center; align-items: stretch; flex-wrap: wrap; }
+.team-banner .tb-panel { position: relative; height: 380px; border-radius: 16px; overflow: hidden; border: 1px solid var(--card-line); background: linear-gradient(160deg, #1a2744, #0d1117); }
 .team-banner .tb-panel img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .team-banner .tb-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.82) 100%); }
 .team-banner .tb-chip { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 20px; font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 .team-banner .tb-label { position: absolute; left: 16px; right: 16px; bottom: 12px; }
 .team-banner .tb-name { font-size: clamp(1rem, 2.4vw, 1.35rem); font-weight: 900; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.85); }
 .team-banner .tb-sub { font-size: 0.68rem; color: rgba(255,255,255,0.88); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; text-shadow: 0 1px 4px rgba(0,0,0,0.85); }
-@media (max-width: 640px){ .team-banner { grid-template-columns: 1fr; } .team-banner .tb-panel { aspect-ratio: 4 / 5; } }
+@media (max-width: 640px){ .team-banner .tb-panel { height: auto; width: 100%; } }
 
 /* ── Monkey toggle (header) ── */
 .mk-toggle { background: transparent; color: var(--muted); border: 1px solid var(--card-line); border-radius: 20px; padding: 5px 12px; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; font-family: inherit; }
@@ -338,11 +342,13 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   }
   // Team photos vary wildly in aspect ratio — a per-team crop focal point keeps
   // the interesting bit (faces, not sky/legs) inside the small circular badge.
-  const PHOTO_CROP = { sunshine: '50% 42%', infantino: '50% 18%' };
+  const PHOTO_CROP = { sunshine: '50% 42%', infantino: '22% 28%' };
   // Separate crop bias for the big portrait banner cards — a 3:4 frame crops
   // Sunshine's tall photo top/bottom, and crops Infantino's wide photo left/right,
   // so each needs its own focal point to keep the interesting content in view.
-  const BANNER_CROP = { sunshine: '50% 44%', infantino: '48% 50%' };
+  // Each photo's own pixel dimensions — used as the card's aspect-ratio so it
+  // renders at a shared height with zero cropping, whatever its orientation.
+  const BANNER_RATIO = { sunshine: '472 / 1024', infantino: '1448 / 1086' };
   const teamPic = t => t.img
     ? `<img class="team-pic" src="${t.img}" alt="" style="object-position:${PHOTO_CROP[t.id] || '50% 50%'}" onerror="this.style.display='none'">`
     : '';
@@ -408,9 +414,10 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
       if (!t.img) return '';
       const capId = t.members && t.members[0];
       const cap = capId && D.players[capId];
+      const ratio = BANNER_RATIO[t.id];
       return `
-        <div class="tb-panel">
-          <img src="${t.img}" alt="" style="object-position:${BANNER_CROP[t.id] || '50% 50%'}" onerror="this.parentElement.remove()">
+        <div class="tb-panel" style="${ratio ? 'aspect-ratio:' + ratio + ';' : ''}">
+          <img src="${t.img}" alt="" onerror="this.parentElement.remove()">
           <div class="tb-scrim"></div>
           <div class="tb-chip" style="background:${t.color}">${t.members.length} players</div>
           <div class="tb-label">
