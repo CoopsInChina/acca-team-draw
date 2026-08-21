@@ -18,10 +18,10 @@ window.ACCA_DATA = {
 
   teams: [
     { id: "sunshine", name: "The Sunshine Bus", short: "Sunshine Bus", color: "#f2a71b",
-      img: "assets/teams/sunshine.svg",
+      img: "assets/teams/SunshinePhoto.jpg",
       members: ["roger", "lincoln", "lacey", "tim", "abby"] },
     { id: "infantino", name: "Team Infantino", short: "Infantino", color: "#1560bd",
-      img: "assets/teams/infantino.svg",
+      img: "assets/teams/InfantinoPhoto.png",
       members: ["garry", "dewi", "mikael", "steve", "niblett"] },
   ],
 
