@@ -32,9 +32,18 @@ const PORT = process.env.PORT || 4599;
 // Resolves with { ok, stdout, stderr } even on a non-zero exit — callers that
 // need to tolerate specific failures (e.g. "nothing to commit") inspect that
 // instead of catching a generic rejection.
+// Prefer Apple's system git over a PATH-resolved one. Some Homebrew git builds
+// end up ABI-mismatched against the system libcurl (a stale/relinked curl after
+// an independent `brew upgrade`), which crashes only on network operations —
+// `git --version` looks fine, but `git push`/`fetch` die with a dyld error like
+// "Symbol not found: _curl_global_trace ... git-remote-http died of signal 6".
+// System git doesn't have this problem, so use it whenever it's present, rather
+// than trusting whatever a launcher script's PATH happens to prioritize.
+const GIT_BIN = fs.existsSync('/usr/bin/git') ? '/usr/bin/git' : 'git';
+
 function git(args) {
   return new Promise((resolve) => {
-    execFile('git', args, { cwd: ROOT }, (err, stdout, stderr) => {
+    execFile(GIT_BIN, args, { cwd: ROOT }, (err, stdout, stderr) => {
       resolve({ ok: !err, stdout: (stdout || '').trim(), stderr: (stderr || '').trim(), code: err ? err.code : 0 });
     });
   });
