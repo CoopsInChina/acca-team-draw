@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 1 · 2026-08-20",
+  updated: "Week 2 · 2026-08-25",
 
   highlight: "🪣 Teams are locked in! The Sunshine Bus (captain Roger) vs Team Infantino (captain Garry) — bring on Week 1.",
 
@@ -42,6 +42,31 @@ window.ACCA_DATA = {
 
   weeks: [
     { week: 1, date: "2026-08-20",
+      expectedReturn: { sunshine: 84.85, infantino: 107.8 },
+      bets: {
+        roger: { betOn: "Lincoln to beat pompey", odds: 2.4, ballsOfSteel: false, result: "loss" },
+        lincoln: { betOn: "Man Utd to beat Hull", odds: 1.37, ballsOfSteel: true, result: "loss" },
+        lacey: { betOn: "inter milan to beat monza", odds: 1.2, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "PSG to beat rennes", odds: 1.36, ballsOfSteel: false, result: "draw" },
+        abby: { betOn: "Stockport to beat blackpool", odds: 1.57, ballsOfSteel: false, result: "loss" },
+        garry: { betOn: "Forest to beat Leeds", odds: 2.25, ballsOfSteel: true, result: "loss" },
+        dewi: { betOn: "Millwall to beat norwich", odds: 2.2, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Arsenal to beat Cov", odds: 1.16, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "AEK to beat Iraklis", odds: 1.16, ballsOfSteel: false, result: "win" },
+        niblett: { betOn: "Luton to beat Notts country", odds: 1.6, ballsOfSteel: false, result: "draw" },
+      },
+      monkey: {
+        expectedReturn: 39.7, seed: "0b9bc04a", poolSize: 5,
+        picks: [
+          { pick: "West Ham United", odds: 1.35, result: "loss", league: "Championship" },
+          { pick: "Arsenal", odds: 1.17, result: "win", league: "Premier League" },
+          { pick: "Inter Milan", odds: 1.2, result: "win", league: "Serie A" },
+          { pick: "PSV Eindhoven", odds: 1.33, result: "win", league: "Eredivisie" },
+          { pick: "Feyenoord", odds: 1.26, result: "win", league: "Eredivisie", backup: true },
+        ],
+      }
+    },
+    { week: 2, date: "2026-08-25",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -56,13 +81,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 39.7, seed: "0b9bc04a", poolSize: 5,
+        expectedReturn: 36.12, seed: "4b67c054", poolSize: 8,
         picks: [
-          { pick: "West Ham United", odds: 1.35, result: "pending", league: "Championship" },
-          { pick: "Arsenal", odds: 1.17, result: "pending", league: "Premier League" },
-          { pick: "Inter Milan", odds: 1.2, result: "pending", league: "Serie A" },
-          { pick: "PSV Eindhoven", odds: 1.33, result: "pending", league: "Eredivisie" },
-          { pick: "Feyenoord", odds: 1.26, result: "pending", league: "Eredivisie", backup: true },
+          { pick: "Bayern Munich", odds: 1.26, result: "pending", league: "Bundesliga" },
+          { pick: "Real Madrid", odds: 1.17, result: "pending", league: "La Liga" },
+          { pick: "AC Milan", odds: 1.35, result: "pending", league: "Serie A" },
+          { pick: "Barcelona", odds: 1.21, result: "pending", league: "La Liga" },
+          { pick: "Juventus", odds: 1.2, result: "pending", league: "Serie A" },
         ],
       }
     },
