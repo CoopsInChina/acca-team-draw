@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 2 · 2026-08-25",
 
-  highlight: "🪣 Teams are locked in! The Sunshine Bus (captain Roger) vs Team Infantino (captain Garry) — bring on Week 1.",
+  highlight: "Monkey in the lead! Terrible first week for all involved... except Bang Average... first Long bet ticked off! \nCaptain Rog poor performance offset by Brightons magic... Sadly Garry couldnt rely on forest to improve his weeked. \nLong season ahead for Spurs and Man Utd Fans....",
 
   stakePerTeamPerWeek: 12.5,
   longBetOdds:         2,
