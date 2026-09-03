@@ -7,9 +7,9 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 2 · 2026-08-25",
+  updated: "Week 3 · 2026-09-03",
 
-  highlight: "Monkey in the lead! Terrible first week for all involved... except Bang Average... first Long bet ticked off! \nCaptain Rog poor performance offset by Brightons magic... Sadly Garry couldnt rely on forest to improve his weeked. \nLong season ahead for Spurs and Man Utd Fans....",
+  highlight: "Monkey for the Win!  Abby for the bin! Mr Hanson enters the guilt club, with the first entry this year, while Gloryhunter narrowly avoids it with the safety net to Niblett keeping his long record of no guilt club intact. Barely.",
 
   stakePerTeamPerWeek: 12.5,
   longBetOdds:         2,
@@ -67,6 +67,31 @@ window.ACCA_DATA = {
       }
     },
     { week: 2, date: "2026-08-25",
+      expectedReturn: { sunshine: 49.96, infantino: 52.13 },
+      bets: {
+        roger: { betOn: "Bayern Munich to beat stuggart", odds: 1.25, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "AC to beat Venezia", odds: 1.37, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Dortmund to beat Hamburg", odds: 1.3, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Wolves to beat stoke", odds: 1.47, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Southend to beat kidderminster", odds: 1.42, ballsOfSteel: false, result: "loss" },
+        garry: { betOn: "Liverpool to beat forest", odds: 1.5, ballsOfSteel: false, result: "draw" },
+        dewi: { betOn: "arsenal to beat villa", odds: 1.5, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Bayern Munich to beat stuggart", odds: 1.22, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "Dortmund to beat Hamburg", odds: 1.3, ballsOfSteel: false, result: "win" },
+        niblett: { betOn: "Feryenoord to beat den haag", odds: 1.36, ballsOfSteel: false, result: "draw" },
+      },
+      monkey: {
+        expectedReturn: 36.12, seed: "4b67c054", poolSize: 8,
+        picks: [
+          { pick: "Bayern Munich", odds: 1.26, result: "win", league: "Bundesliga" },
+          { pick: "Real Madrid", odds: 1.17, result: "win", league: "La Liga" },
+          { pick: "AC Milan", odds: 1.35, result: "win", league: "Serie A" },
+          { pick: "Barcelona", odds: 1.21, result: "win", league: "La Liga" },
+          { pick: "Juventus", odds: 1.2, result: "win", league: "Serie A" },
+        ],
+      }
+    },
+    { week: 3, date: "2026-09-03",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -81,13 +106,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 36.12, seed: "4b67c054", poolSize: 8,
+        expectedReturn: 36.88, seed: "d6123fa8", poolSize: 5,
         picks: [
-          { pick: "Bayern Munich", odds: 1.26, result: "pending", league: "Bundesliga" },
-          { pick: "Real Madrid", odds: 1.17, result: "pending", league: "La Liga" },
-          { pick: "AC Milan", odds: 1.35, result: "pending", league: "Serie A" },
-          { pick: "Barcelona", odds: 1.21, result: "pending", league: "La Liga" },
-          { pick: "Juventus", odds: 1.2, result: "pending", league: "Serie A" },
+          { pick: "Barcelona", odds: 1.27, result: "pending", league: "La Liga", backup: true },
+          { pick: "Bayern Munich", odds: 1.15, result: "pending", league: "Bundesliga", backup: true },
+          { pick: "VfL Wolfsburg", odds: 1.29, result: "pending", league: "2. Bundesliga" },
+          { pick: "West Ham United", odds: 1.35, result: "pending", league: "Championship" },
+          { pick: "Manchester City", odds: 1.16, result: "pending", league: "Premier League" },
         ],
       }
     },
