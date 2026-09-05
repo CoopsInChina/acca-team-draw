@@ -12,7 +12,7 @@ window.ACCA_DATA = {
   highlight: "Monkey for the Win!  Abby for the bin! Mr Hanson enters the guilt club, with the first entry this year, while Gloryhunter narrowly avoids it with the safety net to Niblett keeping his long record of no guilt club intact. Barely.",
 
   stakePerTeamPerWeek: 10,
-  monkeyStakePerWeek: 2.5,
+  monkeyStakePerWeek:  2.5,
   longBetOdds:         2,
   oddsDisplayDefault:  "decimal",
   showMonkeyDefault:   true,
@@ -42,7 +42,7 @@ window.ACCA_DATA = {
   },
 
   weeks: [
-    { week: 1, date: "2026-08-20",
+    { week: 1, date: "2026-08-20", monkeyTeam: "infantino",
       expectedReturn: { sunshine: 84.85, infantino: 107.8 },
       bets: {
         roger: { betOn: "Lincoln to beat pompey", odds: 2.4, ballsOfSteel: false, result: "loss" },
@@ -57,7 +57,7 @@ window.ACCA_DATA = {
         niblett: { betOn: "Luton to beat Notts country", odds: 1.6, ballsOfSteel: false, result: "draw" },
       },
       monkey: {
-        expectedReturn: 39.7, seed: "0b9bc04a", poolSize: 5,
+        expectedReturn: 7.94, seed: "0b9bc04a", poolSize: 5,
         picks: [
           { pick: "West Ham United", odds: 1.35, result: "loss", league: "Championship" },
           { pick: "Arsenal", odds: 1.17, result: "win", league: "Premier League" },
@@ -67,7 +67,7 @@ window.ACCA_DATA = {
         ],
       }
     },
-    { week: 2, date: "2026-08-25",
+    { week: 2, date: "2026-08-25", monkeyTeam: "sunshine",
       expectedReturn: { sunshine: 49.96, infantino: 52.13 },
       bets: {
         roger: { betOn: "Bayern Munich to beat stuggart", odds: 1.25, ballsOfSteel: false, result: "win" },
@@ -82,7 +82,7 @@ window.ACCA_DATA = {
         niblett: { betOn: "Feryenoord to beat den haag", odds: 1.36, ballsOfSteel: false, result: "draw" },
       },
       monkey: {
-        expectedReturn: 36.12, seed: "4b67c054", poolSize: 8,
+        expectedReturn: 7.22, seed: "4b67c054", poolSize: 8,
         picks: [
           { pick: "Bayern Munich", odds: 1.26, result: "win", league: "Bundesliga" },
           { pick: "Real Madrid", odds: 1.17, result: "win", league: "La Liga" },
@@ -92,7 +92,7 @@ window.ACCA_DATA = {
         ],
       }
     },
-    { week: 3, date: "2026-09-03",
+    { week: 3, date: "2026-09-03", monkeyTeam: "infantino",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -107,7 +107,7 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 36.88, seed: "d6123fa8", poolSize: 5,
+        expectedReturn: 7.38, seed: "d6123fa8", poolSize: 5,
         picks: [
           { pick: "Barcelona", odds: 1.27, result: "pending", league: "La Liga", backup: true },
           { pick: "Bayern Munich", odds: 1.15, result: "pending", league: "Bundesliga", backup: true },
