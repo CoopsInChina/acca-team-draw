@@ -211,6 +211,7 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
         <button data-mode="fractional">Fractional</button>
       </span>
       <button class="mk-toggle" id="mk-toggle">🐒 Monkey: on</button>
+      <button class="mk-toggle" id="mk-stats-toggle">💰 Monkey in team stats: off</button>
       <span><a href="../index.html">← Team Draw</a></span>
     </div>
     <div id="demo-flag"></div>
@@ -247,8 +248,8 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   <div class="foot">
     Odds stored as <b>decimal</b>; toggle the display above · a <b>draw counts as a loss</b>.<br>
     Acca lands only if all 5 win · Total Won = expected returns on winning weeks ·
-    Staked = weeks × <b id="f-stake">£12.50</b>/team · Long bet = odds ≥ <b id="f-long">2.00</b> ·
-    Guilt = sole non-winner charged the week's expected return.
+    Staked = weeks × <b id="f-stake">£12.50</b>/team (Monkey <b id="f-monkey-stake">£12.50</b>) ·
+    Long bet = odds ≥ <b id="f-long">2.00</b> · Guilt = sole non-winner charged the week's expected return.
   </div>
 
 </div>
@@ -260,7 +261,20 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   if (!D) { document.body.innerHTML = '<p style="padding:40px;color:#e74c3c">Could not load data.js</p>'; return; }
 
   const STAKE = D.stakePerTeamPerWeek || 12.50;
+  const MONKEY_STAKE = D.monkeyStakePerWeek != null ? D.monkeyStakePerWeek : STAKE;
   const LONG  = D.longBetOdds || 2.00;
+
+  // ── Monkey-in-team-stats toggle ──────────────────────────────────────────────
+  // Each week can assign Monkey to ride with one team (week.monkeyTeam). When this
+  // toggle is ON, that team's Total Staked/Won (and so Profit/ROI) absorb Monkey's
+  // £/week for weeks where Monkey's own bet has settled — deliberately NEVER
+  // touching Individual Wins or Team Score, which stay based on the 5 players only.
+  const anyMonkeyAssignment = D.weeks.some(w => w.monkeyTeam);
+  let includeMonkeyStats = D.includeMonkeyInTeamStatsDefault === true;
+  try { const s = localStorage.getItem('accaIncludeMonkeyStats'); if (s !== null) includeMonkeyStats = (s === '1'); } catch (e) {}
+  const monkeySettledFor = w => !!(w && w.monkey && Array.isArray(w.monkey.picks) && w.monkey.picks.length &&
+    w.monkey.picks.every(p => (p.result || 'pending').toLowerCase() !== 'pending'));
+  const monkeyLandedFor = w => w.monkey.picks.every(p => (p.result || '').toLowerCase() === 'win');
 
   // ── Odds display helpers ────────────────────────────────────────────────────
   let oddsMode = D.oddsDisplayDefault || 'decimal';
@@ -367,30 +381,47 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   });
 
   // ── Team aggregates ─────────────────────────────────────────────────────────
-  const teamStats = {};
-  D.teams.forEach(t => {
-    const mem = t.members.map(id => players[id]).filter(Boolean);
-    const weeksPlayed = D.weeks.filter(w => teamWeekSettled(t, w)).length;
-    const totalWins = mem.reduce((s, p) => s + p.correct, 0);
-    let teamScore = 0, won = 0;
-    D.weeks.forEach(w => {
-      if (teamWeekSettled(t, w) && teamAccaLands(t, w)) {
-        teamScore++;
-        won += (w.expectedReturn && w.expectedReturn[t.id]) || 0;
+  // Rebuildable because the "Monkey in team stats" toggle changes staked/won/
+  // profit/roi at runtime — everything else about a team is toggle-independent.
+  function buildTeamStats() {
+    const ts = {};
+    D.teams.forEach(t => {
+      const mem = t.members.map(id => players[id]).filter(Boolean);
+      const weeksPlayed = D.weeks.filter(w => teamWeekSettled(t, w)).length;
+      const totalWins = mem.reduce((s, p) => s + p.correct, 0);
+      let teamScore = 0, won = 0;
+      D.weeks.forEach(w => {
+        if (teamWeekSettled(t, w) && teamAccaLands(t, w)) {
+          teamScore++;
+          won += (w.expectedReturn && w.expectedReturn[t.id]) || 0;
+        }
+      });
+      let staked = weeksPlayed * STAKE;
+      let monkeyWeeksIncluded = 0;
+      if (includeMonkeyStats) {
+        D.weeks.forEach(w => {
+          if (w.monkeyTeam === t.id && monkeySettledFor(w)) {
+            staked += MONKEY_STAKE;
+            monkeyWeeksIncluded++;
+            if (monkeyLandedFor(w)) won += Number(w.monkey.expectedReturn) || 0;
+          }
+        });
       }
+      const profit = won - staked;
+      const roi = staked ? (profit / staked) * 100 : 0;
+      const avg = key => { const v = mem.map(p => p[key]).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+      ts[t.id] = { team: t, mem, weeksPlayed, totalWins, teamScore, staked, won, profit, roi, monkeyWeeksIncluded,
+        avgPct: avg('pct'), avgWin: avg('aveWin'), avgLose: avg('aveLose'), avgAll: avg('aveAll') };
     });
-    const staked = weeksPlayed * STAKE;
-    const profit = won - staked;
-    const roi = staked ? (profit / staked) * 100 : 0;
-    const avg = key => { const v = mem.map(p => p[key]).filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
-    teamStats[t.id] = { team: t, mem, weeksPlayed, totalWins, teamScore, staked, won, profit, roi,
-      avgPct: avg('pct'), avgWin: avg('aveWin'), avgLose: avg('aveLose'), avgAll: avg('aveAll') };
-  });
+    return ts;
+  }
+  let teamStats = buildTeamStats();
 
   // ── Header meta ─────────────────────────────────────────────────────────────
   document.getElementById('m-season').textContent = D.season || '—';
   document.getElementById('m-updated').textContent = D.updated || '—';
   document.getElementById('f-stake').textContent = money(STAKE);
+  document.getElementById('f-monkey-stake').textContent = money(MONKEY_STAKE);
   document.getElementById('f-long').textContent = Number(LONG).toFixed(2);
   if (D.highlight)
     document.getElementById('highlight').innerHTML =
@@ -404,7 +435,11 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
       '<span class="demo-flag">🕐 Week 0 — pre-season, no bets placed yet</span>';
 
   const [tEu, tAsia] = D.teams;
-  const sEu = teamStats[tEu.id], sAsia = teamStats[tAsia.id];
+  let sEu = teamStats[tEu.id], sAsia = teamStats[tAsia.id];
+  function refreshTeamStats() {
+    teamStats = buildTeamStats();
+    sEu = teamStats[tEu.id]; sAsia = teamStats[tAsia.id];
+  }
 
   // ── Team photo banner ───────────────────────────────────────────────────────
   function renderTeamBanner() {
@@ -443,7 +478,7 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
       totalWins += wins;
       if (wins === picks.length) { teamScore++; won += Number(w.monkey.expectedReturn) || 0; }
     });
-    const staked = weeksPlayed * STAKE, profit = won - staked;
+    const staked = weeksPlayed * MONKEY_STAKE, profit = won - staked;
     return { team: houseTeam, house: true, totalWins, teamScore, staked, won, profit,
              roi: staked ? (profit / staked) * 100 : 0, weeksPlayed };
   }
@@ -489,14 +524,24 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
   function ebitSeries(t) {
     let cum = 0; const pts = [];
     D.weeks.forEach(w => {
-      if (!teamWeekSettled(t, w)) return;
-      const won = teamAccaLands(t, w) ? ((w.expectedReturn && w.expectedReturn[t.id]) || 0) : 0;
-      cum += won - STAKE;
+      let delta = 0, touched = false;
+      if (teamWeekSettled(t, w)) {
+        const won = teamAccaLands(t, w) ? ((w.expectedReturn && w.expectedReturn[t.id]) || 0) : 0;
+        delta += won - STAKE;
+        touched = true;
+      }
+      if (includeMonkeyStats && w.monkeyTeam === t.id && monkeySettledFor(w)) {
+        const mWon = monkeyLandedFor(w) ? (Number(w.monkey.expectedReturn) || 0) : 0;
+        delta += mWon - MONKEY_STAKE;
+        touched = true;
+      }
+      if (!touched) return;
+      cum += delta;
       pts.push({ week: w.week, val: cum });
     });
     return pts;
   }
-  (function drawEbit() {
+  function drawEbit() {
     const a = ebitSeries(tEu), b = ebitSeries(tAsia);
     const box = document.getElementById('ebit');
     if (!a.length && !b.length) { box.innerHTML = '<div class="mini empty">No settled weeks yet</div>'; return; }
@@ -525,7 +570,8 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
     document.getElementById('ebit-legend').innerHTML =
       `<span class="k"><i style="background:${tEu.color}"></i>${tEu.name} — ${money(sEu.profit)}</span>
        <span class="k"><i style="background:${tAsia.color}"></i>${tAsia.name} — ${money(sAsia.profit)}</span>`;
-  })();
+  }
+  drawEbit();
 
   // ── Player tables ───────────────────────────────────────────────────────────
   const tablesEl = document.getElementById('team-tables');
@@ -692,8 +738,23 @@ tr.avg-row td.left { letter-spacing: 1px; text-transform: uppercase; font-size: 
     paintMonkeyToggle(); renderH2H(); renderWeeks();
   });
 
+  // ── "Monkey in team stats" toggle — folds Monkey's £ into its assigned team ──
+  const mkStatsToggleEl = document.getElementById('mk-stats-toggle');
+  function paintMonkeyStatsToggle() {
+    if (!anyMonkeyAssignment) { mkStatsToggleEl.style.display = 'none'; return; }
+    mkStatsToggleEl.style.display = '';
+    mkStatsToggleEl.classList.toggle('on', includeMonkeyStats);
+    mkStatsToggleEl.textContent = '💰 Monkey in team stats: ' + (includeMonkeyStats ? 'on' : 'off');
+  }
+  mkStatsToggleEl.addEventListener('click', () => {
+    includeMonkeyStats = !includeMonkeyStats;
+    try { localStorage.setItem('accaIncludeMonkeyStats', includeMonkeyStats ? '1' : '0'); } catch (e) {}
+    paintMonkeyStatsToggle(); refreshTeamStats(); renderH2H(); drawEbit();
+  });
+
   paintToggle();
   paintMonkeyToggle();
+  paintMonkeyStatsToggle();
   renderTeamBanner();
   renderH2H();
   renderOddsDependent();

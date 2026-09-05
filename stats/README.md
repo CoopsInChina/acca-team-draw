@@ -21,7 +21,7 @@ acca only pays out if **all 5 win**. Each week you enter:
 Everything else is worked out automatically:
 
 - **Total Won** = sum of expected returns for weeks the acca landed (all 5 won).
-- **Total Staked** = weeks played × £12.50 per team.
+- **Total Staked** = weeks played × £10 per team (Monkey stakes £2.50/week separately).
 - **Profit / ROI**, **Team Score** (weeks all 5 win), per-player win %, average
   win/lose/all odds, and win/lose streaks.
 - **Long bets** = any pick at odds ≥ 2.00 (won → Successful, lost/drew → Failed).
@@ -78,9 +78,17 @@ server is what lets it save in place.
 
 | Setting                | Default   | Meaning                              |
 |------------------------|-----------|--------------------------------------|
-| `stakePerTeamPerWeek`  | `12.50`   | Weekly acca stake per team           |
+| `stakePerTeamPerWeek`  | `10`      | Weekly acca stake per team           |
+| `monkeyStakePerWeek`   | `2.50`    | Monkey's own weekly stake (separate) |
 | `longBetOdds`          | `2.00`    | Odds at/above which a pick is "long" |
 | `oddsDisplayDefault`   | `decimal` | Startup odds format (page has a toggle) |
+| `includeMonkeyInTeamStatsDefault` | `false` | Fold Monkey's £ into its assigned team by default? |
+
+**Monkey riding with a team**: set `week.monkeyTeam` (via the admin editor's
+"Monkey rides with" dropdown) to fold Monkey's stake/winnings into that team's
+Total Staked/Won when the page's **💰 Monkey in team stats** switch is on —
+this never touches Individual Wins or Team Score, which stay based on the
+five players only.
 
 Odds are always **typed as decimals**; the page has a Decimal ⇄ Fractional
 toggle for display only.

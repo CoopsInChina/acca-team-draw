@@ -94,9 +94,14 @@ The weekly bet is a **5‑fold accumulator** — it only pays if **all five win*
 **Per team (Head to Head)**
 - **Individual Wins** — sum of the five members' wins
 - **Team Score** — weeks where all five placed a bet *and* all five won
-- **Total Staked** — weeks played × **£12.50** per team
+- **Total Staked** — weeks played × **£10** per team
 - **Total Won** — sum of that team's **expected return** on weeks the acca landed
 - **Profit** — Total Won − Total Staked · **ROI** — Profit ÷ Staked × 100
+- With the **🐒 Monkey: on** and **💰 Monkey in team stats: on** switches, a week
+  can assign Monkey to ride with one team (`week.monkeyTeam`, set in the admin
+  editor); when the second switch is on, Monkey's own **£2.50/week** stake and
+  any winnings fold into that team's Total Staked/Won/Profit/ROI — never its
+  Individual Wins or Team Score, which stay based on the five players only
 
 **Side competitions**
 - **Long bet** — any pick at odds **≥ 2.00** (won = successful, lost/drew = failed)
@@ -122,10 +127,12 @@ window.ACCA_DATA = {
   updated: "Week 5 · 2026-09-20",
   highlight: "🔥 …one-line headline shown at the top…",
 
-  stakePerTeamPerWeek: 12.50,   // acca stake per team per week
+  stakePerTeamPerWeek: 10,      // acca stake per team per week
+  monkeyStakePerWeek: 2.50,     // Monkey's own weekly stake (separate from teams)
   longBetOdds: 2.00,            // odds ≥ this = a "long bet"
   oddsDisplayDefault: "decimal",
   showMonkeyDefault: true,      // Head-to-Head shows Monkey by default
+  includeMonkeyInTeamStatsDefault: false,  // fold Monkey's £ into its assigned team?
 
   teams: [                      // two fixed teams, five members each
     { id:"europe", name:"Team Europe", short:"Team EU", color:"#2f6fed",
@@ -145,6 +152,7 @@ window.ACCA_DATA = {
   weeks: [
     { week:1, date:"2026-08-16",
       expectedReturn: { europe: 124.30, asia: 96.00 },   // each acca's potential payout
+      monkeyTeam: "europe",   // optional: which team Monkey rides with this week
       bets: {
         tim: { betOn:"Man City to win", odds:1.45, ballsOfSteel:false, result:"win" },
         // …one line per player… result = "win" | "loss" | "draw" | "pending"
@@ -163,8 +171,8 @@ window.ACCA_DATA = {
 ```
 
 - **Odds are always decimal** (e.g. `1.45`). The page has a display toggle.
-- `expectedReturn` per team = the acca's potential payout for the £12.50 stake.
-- The Monkey's `expectedReturn` is **auto‑computed** = product of the 5 odds × £12.50.
+- `expectedReturn` per team = the acca's potential payout for the £10 stake.
+- The Monkey's `expectedReturn` is **auto‑computed** = product of the 5 odds × £2.50.
 - `data week0.js` / `data_old.js` are kept snapshots — the live file is `data.js`.
 
 ---
@@ -233,7 +241,7 @@ Monkey Magic is the automated benchmark "team". Each week it:
    reproducible), recording both the pool size and the 5 chosen.
 
 The pick is **locked on the first attempt** — no re‑rolling — and its expected
-return is auto‑computed (product of the 5 odds × £12.50).
+return is auto‑computed (product of the 5 odds × Monkey's own £2.50 stake).
 
 **API key** — free tier (500 requests/month; a generation uses ~11). Get a key at
 the‑odds‑api.com, then either:

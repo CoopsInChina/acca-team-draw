@@ -11,7 +11,8 @@ window.ACCA_DATA = {
 
   highlight: "Monkey for the Win!  Abby for the bin! Mr Hanson enters the guilt club, with the first entry this year, while Gloryhunter narrowly avoids it with the safety net to Niblett keeping his long record of no guilt club intact. Barely.",
 
-  stakePerTeamPerWeek: 12.5,
+  stakePerTeamPerWeek: 10,
+  monkeyStakePerWeek: 2.5,
   longBetOdds:         2,
   oddsDisplayDefault:  "decimal",
   showMonkeyDefault:   true,

@@ -84,6 +84,9 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
 /* Monkey Magic card */
 #monkey-card .mk-status { font-size:0.6rem; letter-spacing:1px; text-transform:uppercase; color:#c9a6ec; margin-left:8px; }
+.mk-assign { display:flex; align-items:center; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); flex-wrap:wrap; }
+.mk-assign label { margin:0; }
+.mk-assign select { width:auto; min-width:160px; }
 .mk-controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
 #mk-generate { background:rgba(125,60,201,0.25); color:#e0cdf5; border:1px solid rgba(125,60,201,0.55); }
 #mk-generate:disabled { opacity:0.75; cursor:default; }
@@ -157,6 +160,11 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     </div>
     <div id="mk-picks"></div>
     <div class="hint" id="mk-summary"></div>
+    <div class="mk-assign">
+      <label for="mk-team">Monkey rides with</label>
+      <select id="mk-team"><option value="">— none —</option></select>
+      <span class="hint">Only affects £ (staked/won) on the live site's "Monkey in team stats" toggle — never wins or Team Score.</span>
+    </div>
   </div>
 
   <details class="preview">
@@ -233,13 +241,20 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 
   // ---- Monkey Magic — Stage 1 generate (locked after) + Stage 2 settle -----
   const STAKE = DATA.stakePerTeamPerWeek || 12.50;
+  const MONKEY_STAKE = DATA.monkeyStakePerWeek != null ? DATA.monkeyStakePerWeek : STAKE;
   const HOUSE = DATA.houseTeam || null;
   let monkeyState = null;   // { seed, poolSize, expectedReturn, picks:[{pick,odds,result,league}] }
   let monkeyGenerating = false;   // true while a Generate request is in flight — blocks Save
 
+  // Populate the "Monkey rides with" dropdown once, from the real teams.
+  const mkTeamEl = $('mk-team');
+  if (mkTeamEl) {
+    TEAMS.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; mkTeamEl.appendChild(o); });
+  }
+
   function computeMonkeyER(picks) {
     const prod = picks.reduce((a, p) => a * (Number(p.odds) || 1), 1);
-    return Math.round(prod * STAKE * 100) / 100;
+    return Math.round(prod * MONKEY_STAKE * 100) / 100;
   }
   function renderMonkey() {
     if (!HOUSE) { const c = $('monkey-card'); if (c) c.style.display = 'none'; return; }
@@ -263,7 +278,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       const s = $(`mk-res-${i}`); s.className = 'res-' + (p.result || 'pending');
       s.addEventListener('change', e => { monkeyState.picks[i].result = e.target.value; s.className = 'res-' + e.target.value; markDirty(); refreshPreview(); });
     });
-    summ.innerHTML = `Expected return <b>£${monkeyState.expectedReturn.toFixed(2)}</b> · pool ${monkeyState.poolSize} · seed ${monkeyState.seed} · <span class="dim">auto (product of odds × £${STAKE.toFixed(2)})</span>`;
+    summ.innerHTML = `Expected return <b>£${monkeyState.expectedReturn.toFixed(2)}</b> · pool ${monkeyState.poolSize} · seed ${monkeyState.seed} · <span class="dim">auto (product of odds × £${MONKEY_STAKE.toFixed(2)})</span>`;
   }
   async function generateMonkey() {
     if (monkeyState && monkeyState.picks.length) { toast('Already generated — locked for this week', false); return; }
@@ -333,6 +348,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     ORDER.forEach(id => { $(`bet-${id}`).value=''; $(`odds-${id}`).value=''; $(`bos-${id}`).checked=false; const r=$(`res-${id}`); r.value='pending'; paintResult(id,'pending'); });
     $('btn-delete').style.display = 'none';
     loadedNote = null;
+    if (mkTeamEl) mkTeamEl.value = '';
     monkeyState = null; renderMonkey();
   }
   let loadedNote = null;
@@ -354,6 +370,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       const r = (b.result || 'pending'); $(`res-${id}`).value = r; paintResult(id, r);
     });
     $('btn-delete').style.display = '';
+    if (mkTeamEl) mkTeamEl.value = w.monkeyTeam || '';
     monkeyState = w.monkey ? {
       seed: w.monkey.seed, poolSize: w.monkey.poolSize, expectedReturn: Number(w.monkey.expectedReturn) || 0,
       picks: (w.monkey.picks || []).map(p => ({ pick: p.pick, odds: Number(p.odds), result: p.result || 'pending', league: p.league || '', backup: !!p.backup })),
@@ -376,6 +393,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     if (!num || num < 1) { toast('Enter a valid week number', false); return null; }
     const week = { week: num, date: $('wk-date').value || '', expectedReturn: {}, bets: {} };
     if (loadedNote) week.note = loadedNote;
+    if (mkTeamEl && mkTeamEl.value) week.monkeyTeam = mkTeamEl.value;
     TEAMS.forEach(t => { week.expectedReturn[t.id] = parseFloat($('er-' + t.id).value) || 0; });
     ORDER.forEach(id => {
       week.bets[id] = {
@@ -436,9 +454,11 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     o += `  updated: ${q(d.updated)},\n\n`;
     if (d.highlight != null && d.highlight !== '') o += `  highlight: ${q(d.highlight)},\n\n`;
     o += `  stakePerTeamPerWeek: ${Number(d.stakePerTeamPerWeek)},\n`;
+    if (d.monkeyStakePerWeek != null) o += `  monkeyStakePerWeek:  ${Number(d.monkeyStakePerWeek)},\n`;
     o += `  longBetOdds:         ${Number(d.longBetOdds)},\n`;
     o += `  oddsDisplayDefault:  ${q(d.oddsDisplayDefault)},\n`;
     if (d.showMonkeyDefault != null) o += `  showMonkeyDefault:   ${!!d.showMonkeyDefault},\n`;
+    if (d.includeMonkeyInTeamStatsDefault != null) o += `  includeMonkeyInTeamStatsDefault: ${!!d.includeMonkeyInTeamStatsDefault},\n`;
     o += '\n  teams: [\n';
     d.teams.forEach(t => {
       o += `    { id: ${q(t.id)}, name: ${q(t.name)}, short: ${q(t.short)}, color: ${q(t.color)},\n`;
@@ -457,7 +477,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     });
     o += '  },\n\n  weeks: [\n';
     d.weeks.slice().sort((a, b) => a.week - b.week).forEach(w => {
-      o += `    { week: ${w.week}, date: ${q(w.date)}${w.note ? ', note: ' + q(w.note) : ''},\n`;
+      o += `    { week: ${w.week}, date: ${q(w.date)}${w.note ? ', note: ' + q(w.note) : ''}${w.monkeyTeam ? ', monkeyTeam: ' + q(w.monkeyTeam) : ''},\n`;
       o += `      expectedReturn: { ${d.teams.map(t => `${t.id}: ${Number((w.expectedReturn||{})[t.id]) || 0}`).join(', ')} },\n`;
       o += '      bets: {\n';
       d.teams.flatMap(t => t.members).forEach(id => {
