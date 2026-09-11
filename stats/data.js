@@ -129,7 +129,7 @@ window.ACCA_DATA = {
         dewi: { betOn: "Porto away at Casa Pia", odds: 1.22, ballsOfSteel: false, result: "pending" },
         mikael: { betOn: "IFK to beat Halmstads BK", odds: 1.42, ballsOfSteel: true, result: "pending" },
         steve: { betOn: "Dortmund to beat Paderborn", odds: 1.22, ballsOfSteel: false, result: "pending" },
-        niblett: { betOn: "Spurs to get a lucky goal", odds: 1.2, ballsOfSteel: false, result: "pending" },
+        niblett: { betOn: "Spurs to get a lucky goal", odds: 1.2, ballsOfSteel: true, result: "pending" },
       },
       monkey: {
         expectedReturn: 6.46, seed: "da2b6cc6", poolSize: 9,
