@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 4 · 2026-09-11",
 
-  highlight: "Poor showing from all this week, with Bayern and Wolfsburg letting everyone down.",
+  highlight: "Poor showing from all this week, with Bayern and Wolfsburg letting everyone down. In other news, Andy still struggling to get off the scoring mark, just like spurs.... \n\nOh.... Andy... we all see what you've done there. Cheeky.",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
