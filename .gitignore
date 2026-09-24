@@ -3,3 +3,4 @@
 stats/data.js.bak
 stats/admin/oddsapi.key
 *.picks.json
+stats/admin/scores-archive.json

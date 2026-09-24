@@ -216,6 +216,8 @@ Then open **http://localhost:4599/stats/admin/**.
 - Enter each player's **bet, decimal odds, 🔩 balls‑of‑steel, result**.
 - Enter each team's **expected return**, and the **weekly highlight**.
 - **🐒 Generate picks** for Monkey Magic (see below).
+- **🏁 Fetch results** — looks up finished scores and *proposes* a result for each
+  pick (see "Automatic results" below).
 - **Apply week** (stages it in memory + updates the live preview), then **Save to
   data.js** — or **Download** / **Copy** if you're running it without the server
   (plain `file://`, where in‑place saving isn't possible).
@@ -266,7 +268,40 @@ bankers exist for a live pull), open the editor with a mock flag:
 `http://localhost:4599/stats/admin/?mock=1`.
 
 Config (leagues, the 1.40 threshold, home‑only, pool cap, region) lives in the
-`CONFIG` object at the top of `monkey.js`.
+`CONFIG` object at the top of `monkey.js`. International competitions
+(Nations League, World Cup/Euro qualifiers, the summer tournaments) are listed
+there too and are only queried while the API reports them in season. The Odds API
+has **no international‑friendlies feed**, so those can't be included.
+
+### 4c. Automatic results — `stats/admin/settle.js`
+
+The editor's **🏁 Fetch results** button looks up finished scores and **proposes**
+win/loss/draw for each pick. It never edits anything by itself: you tick the
+proposals you want, press **Apply selected** (which only fills the result
+dropdowns), check them, then Save as normal.
+
+- **What it can settle:** Monkey's picks (exact API team names) and player bets
+  worded "X to beat Y" or "X to win". Anything else ("Everton draw", "Liverpool
+  ‑1", "BTTS", over/under) is listed as **Manual** with the reason — never guessed.
+- **Matching:** fuzzy team names with a small alias table ("Man City", "QPR",
+  "Pompey"…); the opponent must corroborate, and a near‑tie is flagged
+  **Ambiguous** rather than picked. A row that contradicts a result you've already
+  set is left unticked.
+- **Cost & reach — run it within 3 days of the games.** The scores feed costs
+  **2 API credits per league searched** and only reaches back **3 days**, so for a
+  Fri–Mon weekend the sweet spot is **Sunday night / Monday** (Tuesday still gets
+  most of it; from Wednesday most games are out of reach).
+- **It asks before spending.** If most of the week's games are too old for the feed
+  (or haven't been played yet) it spends nothing, explains why, and offers
+  **Search anyway (up to 24 credits)**. Otherwise it searches the local archive
+  first (free), then queries leagues one at a time, stopping as soon as each pick's
+  league is located (capped at 12 leagues; **Search more leagues** goes further).
+  A game that's found but not finished, or found but too old, is reported as such
+  rather than triggering more searching.
+- **Archive:** every completed game it sees is saved to
+  `stats/admin/scores-archive.json` (git‑ignored), so results fetched on Monday are
+  still usable later — run it within 3 days of the games and older weeks stay
+  settleable. Delete the file any time; it just refills.
 
 ---
 

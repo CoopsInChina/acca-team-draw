@@ -142,6 +142,55 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // ---- Results: PROPOSE win/loss/draw for picks from finished scores --------
+  // Read-only with respect to data.js — the editor shows the proposals and the
+  // user applies + saves. Costs 2 API credits per league searched (see settle.js).
+  if (req.method === 'POST' && req.url === '/api/settle') {
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 200000) req.destroy(); });
+    req.on('end', async () => {
+      const fail = (code, msg) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: msg })); console.log(`  ✘ settle: ${msg}`); };
+      let input;
+      try { input = JSON.parse(body); } catch (e) { return fail(400, 'Request body was not valid JSON'); }
+      const picks = Array.isArray(input.picks) ? input.picks : null;
+      if (!picks || !picks.length || picks.length > 40) return fail(400, 'Send between 1 and 40 picks');
+      const clean = picks.map(p => ({ id: String(p && p.id || '').slice(0, 40), kind: p && p.kind === 'monkey' ? 'monkey' : 'player',
+        text: String(p && p.text || '').slice(0, 200), league: p && p.league ? String(p.league).slice(0, 60) : undefined }));
+      const maxFeeds = Math.min(Math.max(parseInt(input.maxFeeds, 10) || 12, 1), 40);
+      try {
+        const mk = require('./monkey.js'), settle = require('./settle.js');
+        const key = mk.resolveKey();
+        if (!key) return fail(500, 'No API key. Set ODDS_API_KEY or create stats/admin/oddsapi.key.');
+        const deps = {
+          loadArchive: () => settle.loadArchive(),
+          saveArchive: m => settle.saveArchive(m),
+          listActiveKeys: async () => {
+            try { return await mk.fetchActiveKeys(key); }
+            catch (e) { if (e.network) throw new Error(`Can't reach The Odds API from this computer: ${e.message} (VPN/proxy/firewall — see the launcher's NODE_USE_ENV_PROXY note).`); throw e; }
+          },
+          fetchFeed: async k => {
+            const r = await mk.fetchWithRetry(`https://api.the-odds-api.com/v4/sports/${k}/scores/?daysFrom=3&apiKey=${key}`);
+            if (r.status === 401) throw new Error('401 Unauthorised — check your API key (or the monthly credits are used up)');
+            if (!r.ok) throw new Error(`${k}: HTTP ${r.status}`);
+            return { events: await r.json(), remaining: r.headers.get('x-requests-remaining'), last: r.headers.get('x-requests-last') };
+          },
+          leagueKeyForLabel: l => (mk.CONFIG.leagues.find(x => x.label === l) || {}).key,
+          leagueLabelForKey: k => (mk.CONFIG.leagues.find(x => x.key === k) || {}).label || k.replace(/^soccer_/, '').replace(/_/g, ' '),
+          priorityKeys: active => {
+            const cfg = mk.CONFIG.leagues.map(l => l.key).filter(k => active.has(k));
+            return [...cfg, ...[...active].filter(k => /^soccer_/.test(k) && !cfg.includes(k)).sort()];
+          },
+        };
+        const result = await settle.proposeResults({ picks: clean, date: String(input.date || ''), deps, maxFeeds, allowFruitless: input.allowFruitless === true });
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, ...result }));
+        const n = s => result.proposals.filter(p => p.status === s).length;
+        console.log(`  🏁 settle${result.needsConfirm ? ' (asked to confirm — nothing spent)' : ''}: ${n('settled')} settled, ${n('pending')} pending, ${n('ambiguous')} ambiguous, ${n('notfound')} not found, ${n('manual')} manual — ${result.creditsUsed} credits${result.remaining != null ? ` (${result.remaining} left)` : ''}`);
+      } catch (e) { fail(500, String(e.message || e)); }
+    });
+    return;
+  }
+
   // ---- Monkey Magic: generate this week's banker picks --------------------
   if (req.method === 'GET' && req.url.split('?')[0] === '/api/monkey') {
     const params = new URLSearchParams((req.url.split('?')[1] || ''));

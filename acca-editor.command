@@ -28,6 +28,12 @@ if ! command -v node >/dev/null 2>&1; then
   exit 1
 fi
 
+# Node's fetch ignores proxy environment variables by default (curl and browsers
+# don't), so with a VPN/proxy the odds pull could fail with a bare "fetch failed"
+# while everything else worked. This makes it honour https_proxy/http_proxy if
+# they're set (Node 24.5+); it does nothing when they aren't.
+export NODE_USE_ENV_PROXY=1
+
 PORT="${PORT:-4599}"
 URL="http://localhost:${PORT}/stats/admin/"
 

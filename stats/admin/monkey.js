@@ -44,7 +44,24 @@ const CONFIG = {
     { key: 'soccer_spain_la_liga',          country: 'Spain',       label: 'La Liga' },
     { key: 'soccer_spain_segunda_division', country: 'Spain',       label: 'La Liga 2' },
     { key: 'soccer_netherlands_eredivisie', country: 'Netherlands', label: 'Eredivisie' },
+
+    // International competitions — these fill the pool on international-break
+    // weeks when the domestic leagues are idle. The Odds API has NO "international
+    // friendlies" feed at all (checked every soccer key), so those can't be added.
+    // Only feeds the API currently reports as active are queried (see
+    // fetchActiveKeys), so listing off-season competitions here costs nothing.
+    { key: 'soccer_uefa_nations_league',                      country: 'International', label: 'Nations League' },
+    { key: 'soccer_fifa_world_cup_qualifiers_europe',         country: 'International', label: 'World Cup Qualifiers (Europe)' },
+    { key: 'soccer_fifa_world_cup_qualifiers_south_america',  country: 'International', label: 'World Cup Qualifiers (S. America)' },
+    { key: 'soccer_uefa_euro_qualification',                  country: 'International', label: 'Euro Qualification' },
+    { key: 'soccer_fifa_world_cup',                           country: 'International', label: 'World Cup' },
+    { key: 'soccer_uefa_european_championship',               country: 'International', label: 'Euros' },
+    { key: 'soccer_conmebol_copa_america',                    country: 'International', label: 'Copa América' },
+    { key: 'soccer_concacaf_gold_cup',                        country: 'International', label: 'Gold Cup' },
+    { key: 'soccer_africa_cup_of_nations',                    country: 'International', label: 'Africa Cup of Nations' },
   ],
+  requestTimeoutMs: 15000,   // per attempt
+  requestAttempts:  3,       // total tries per request before giving up
 };
 
 // ---- API key resolution ----------------------------------------------------
@@ -138,11 +155,49 @@ function buildPool(events, league, win) {
 }
 
 // ---- Fetch odds for one league (live) --------------------------------------
+// Node's fetch reports every network failure as the useless message "fetch failed";
+// the actual reason (ETIMEDOUT, ENOTFOUND, ECONNRESET, UND_ERR_CONNECT_TIMEOUT…)
+// lives on e.cause. Surface it so a failure is diagnosable instead of a mystery.
+function describeNetErr(e) {
+  if (e && e.name === 'TimeoutError') return `timed out after ${CONFIG.requestTimeoutMs / 1000}s`;
+  const cause = e && e.cause;
+  const code = cause && (cause.code || cause.name || cause.message);
+  const base = (e && e.message) || String(e);
+  return code ? `${base} (${code})` : base;
+}
+
+// GET with a per-attempt timeout and a few retries — the odds pull is a burst of
+// requests, and a single dropped connection shouldn't sink the whole draw.
+async function fetchWithRetry(url) {
+  let lastErr;
+  for (let attempt = 1; attempt <= CONFIG.requestAttempts; attempt++) {
+    try {
+      return await fetch(url, { signal: AbortSignal.timeout(CONFIG.requestTimeoutMs) });
+    } catch (e) {
+      lastErr = e;
+      if (attempt < CONFIG.requestAttempts) await new Promise(r => setTimeout(r, 700 * attempt));
+    }
+  }
+  const err = new Error(describeNetErr(lastErr));
+  err.network = true;
+  throw err;
+}
+
+// Which sports the API currently lists as in-season. This endpoint costs no
+// quota, lets us skip idle competitions (no wasted credits), and doubles as a
+// fast connectivity check: if it can't be reached, nothing else will be either.
+async function fetchActiveKeys(key) {
+  const res = await fetchWithRetry(`https://api.the-odds-api.com/v4/sports/?apiKey=${key}`);
+  if (res.status === 401) throw new Error('401 Unauthorised — check your API key (or the monthly credits are used up)');
+  if (!res.ok) throw new Error(`sports list: HTTP ${res.status}`);
+  return new Set((await res.json()).filter(s => s.active).map(s => s.key));
+}
+
 async function fetchLeague(league, key) {
   const url = `https://api.the-odds-api.com/v4/sports/${league.key}/odds/`
             + `?regions=${CONFIG.region}&markets=h2h&oddsFormat=decimal&apiKey=${key}`;
-  const res = await fetch(url);
-  if (res.status === 401) throw new Error('401 Unauthorised — check your API key');
+  const res = await fetchWithRetry(url);
+  if (res.status === 401) throw new Error('401 Unauthorised — check your API key (or the monthly credits are used up)');
   if (!res.ok) { const body = await res.text().catch(() => ''); throw new Error(`${league.key}: HTTP ${res.status} ${body.slice(0, 120)}`); }
   const remaining = res.headers.get('x-requests-remaining');
   const data = await res.json();
@@ -160,6 +215,8 @@ async function generate(opts = {}) {
   const rawLeagues = [];
   let remaining = null;
   const leaguesUsed = [];
+  const leagueErrors = [];      // { league, error } for every feed that failed to load
+  const skippedInactive = [];   // configured feeds the API says are out of season
 
   if (opts.mock) {
     require('./monkey.mock.js')(win).forEach(({ league, events }) => {
@@ -168,13 +225,32 @@ async function generate(opts = {}) {
   } else {
     const key = opts.key || resolveKey();
     if (!key) throw new Error('No API key. Set ODDS_API_KEY or create stats/admin/oddsapi.key (see --help).');
+
+    // Connectivity check + in-season filter in one free call. If THIS fails, the
+    // machine can't reach the API at all — say so plainly rather than letting
+    // eleven separate "fetch failed" lines (and an empty pool) hide the cause.
+    let activeKeys = null;
+    try {
+      activeKeys = await fetchActiveKeys(key);
+    } catch (e) {
+      if (e.network) {
+        throw new Error(`Can't reach The Odds API from this computer: ${e.message}. `
+          + `The API itself is fine — this is your network path (VPN/proxy/firewall). `
+          + `Node ignores system proxy settings; if you use one, start the editor with `
+          + `https_proxy set (the launcher now enables NODE_USE_ENV_PROXY for this).`);
+      }
+      throw e;            // e.g. bad key / out of credits — already a clear message
+    }
+
     for (const league of CONFIG.leagues) {
+      if (activeKeys && !activeKeys.has(league.key)) { skippedInactive.push(league.label); continue; }
       try {
         const { data, remaining: rem } = await fetchLeague(league, key);
         if (rem != null) remaining = rem;
         leaguesUsed.push(league.label);
         rawLeagues.push({ league, events: data });
       } catch (e) {
+        leagueErrors.push({ league: league.label, error: e.message });
         console.error(`  ! ${league.label}: ${e.message}`);
       }
     }
@@ -216,7 +292,10 @@ async function generate(opts = {}) {
   pool = pool.slice(0, CONFIG.poolCap);
 
   if (pool.length < CONFIG.pick)
-    throw new Error(`Only ${pool.length} banker(s) found between ${CONFIG.minOdds} and ${CONFIG.threshold} (home ${homeFound}, away backup ${backupFound}) — need at least ${CONFIG.pick}.`);
+    throw new Error(`Only ${pool.length} banker(s) found between ${CONFIG.minOdds} and ${CONFIG.threshold} (home ${homeFound}, away backup ${backupFound}) — need at least ${CONFIG.pick}.`
+      + ` Searched ${leaguesUsed.length} in-season competition(s)`
+      + (leagueErrors.length ? `; ${leagueErrors.length} failed to load (${leagueErrors.map(x => `${x.league}: ${x.error}`).join('; ')})` : '')
+      + '.');
 
   const picks = shuffle(pool, rng).slice(0, CONFIG.pick);
 
@@ -228,6 +307,7 @@ async function generate(opts = {}) {
     minOdds: CONFIG.minOdds,
     threshold: CONFIG.threshold,
     leagues: leaguesUsed,
+    leagueErrors, skippedInactive,
     homeFound, backupFound,          // how many of the qualifiers were home vs away-backup
     qualifyingFound: fullSize,      // total bankers found (before the 50 cap)
     poolSize: pool.length,          // recorded pool (<= 50)
@@ -260,4 +340,6 @@ if (require.main === module) {
   }).catch(err => { console.error('\n  ✘ ' + err.message + '\n'); process.exit(1); });
 }
 
-module.exports = { generate, buildPool, candidate, teamOdds, weekendWindow, mulberry32, shuffle, CONFIG };
+module.exports = { generate, buildPool, candidate, teamOdds, weekendWindow, mulberry32, shuffle, CONFIG,
+  // shared with the results tool (settle.js / serve.js) so both use the same hardened networking
+  resolveKey, fetchWithRetry, fetchActiveKeys, describeNetErr };

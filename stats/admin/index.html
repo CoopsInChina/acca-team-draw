@@ -87,6 +87,28 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
 .mk-assign { display:flex; align-items:center; gap:10px; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); flex-wrap:wrap; }
 .mk-assign label { margin:0; }
 .mk-assign select { width:auto; min-width:160px; }
+
+/* Results review */
+#results-card .rv-status { font-size:0.6rem; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-left:8px; }
+#rv-fetch, #rv-more, #rv-apply { background:rgba(46,204,113,0.16); color:#c8f2d8; border:1px solid rgba(46,204,113,0.5); }
+#rv-more { background:transparent; color:var(--muted); border-color:var(--line); }
+#rv-fetch:disabled, #rv-apply:disabled, #rv-more:disabled { opacity:0.5; cursor:default; }
+#rv-summary { margin:2px 0 10px; }
+.rvrow { display:grid; grid-template-columns: 24px 140px 1.3fr 118px 1.5fr; gap:10px; align-items:center; padding:8px 0; border-top:1px solid rgba(255,255,255,0.05); font-size:0.82rem; }
+.rvrow:first-child { border-top:none; }
+.rvrow input[type=checkbox] { width:18px; height:18px; accent-color:var(--gold); cursor:pointer; }
+.rvrow input[type=checkbox]:disabled { cursor:default; opacity:0.3; }
+.rv-who { font-weight:700; }
+.rv-pick { color:#cdd7ea; }
+.rv-prop { font-weight:800; font-size:0.7rem; letter-spacing:1px; text-transform:uppercase; }
+.rv-prop small { display:block; font-weight:600; letter-spacing:0; text-transform:none; color:var(--muted); }
+.rv-prop.settled-win{ color:var(--win); } .rv-prop.settled-loss{ color:var(--loss); } .rv-prop.settled-draw{ color:var(--draw); }
+.rv-prop.pending, .rv-prop.manual, .rv-prop.notfound { color:var(--muted); } .rv-prop.ambiguous { color:var(--draw); }
+.rv-match { color:var(--muted); font-size:0.76rem; }
+.rv-match b { color:#cdd7ea; font-weight:700; }
+.rv-applybar { display:flex; align-items:center; gap:12px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line); flex-wrap:wrap; }
+.rv-note { color:var(--draw); font-size:0.74rem; margin:4px 0; }
+@media (max-width:720px){ .rvrow { grid-template-columns: 24px 1fr 100px; } .rvrow .rv-pick, .rvrow .rv-match { grid-column: 2 / 4; } }
 .mk-controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
 #mk-generate { background:rgba(125,60,201,0.25); color:#e0cdf5; border:1px solid rgba(125,60,201,0.55); }
 #mk-generate:disabled { opacity:0.75; cursor:default; }
@@ -164,6 +186,21 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       <label for="mk-team">Monkey rides with</label>
       <select id="mk-team"><option value="">— none —</option></select>
       <span class="hint">Only affects £ (staked/won) on the live site's "Monkey in team stats" toggle — never wins or Team Score.</span>
+    </div>
+  </div>
+
+  <div class="card" id="results-card">
+    <h2>🏁 Results <span class="rv-status" id="rv-status"></span></h2>
+    <div class="mk-controls">
+      <button type="button" id="rv-fetch">🏁 Fetch results</button>
+      <button type="button" id="rv-more" style="display:none">🔎 Search more leagues</button>
+      <span class="hint">Looks up finished scores and <b>proposes</b> a result for each pick (win bets only — draws, BTTS, handicaps stay manual). Nothing changes until you Apply, and nothing is saved until you Save. About 2 API credits per league searched; the feed only reaches back 3 days, but games it sees are archived locally.</span>
+    </div>
+    <div id="rv-summary" class="hint"></div>
+    <div id="rv-body"></div>
+    <div class="rv-applybar" id="rv-applybar" style="display:none">
+      <button type="button" id="rv-apply">✓ Apply selected</button>
+      <span class="hint" id="rv-applyhint"></span>
     </div>
   </div>
 
@@ -311,7 +348,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       // server responded — surface its actual reason verbatim (e.g. "No API key…"
       // or "Only 3 banker(s) found under 1.4 — need at least 5.") without guessing
       gen.disabled = false; gen.textContent = '🐒 Generate picks';
-      toast(e.message, false, 6000);
+      toast(e.message, false, Math.max(6000, e.message.length * 55));   // long diagnostics need time to read
     } finally {
       monkeyGenerating = false; syncSaveGuard();
     }
@@ -326,6 +363,124 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       b.disabled = monkeyGenerating;
       b.title = monkeyGenerating ? 'Waiting for Monkey picks to finish generating…' : '';
     });
+  }
+
+  // ---- Results: fetch finished scores → PROPOSE results → user applies ----------
+  // Never edits anything by itself: proposals are shown for review, and only ticked
+  // ones are copied into the result dropdowns when "Apply" is pressed. Saving is
+  // still a separate, deliberate step.
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let rvProposals = [];     // last proposals shown, index-aligned with the checkbox ids
+  let rvMaxFeeds = 12;
+  let rvBusy = false;
+  let rvNeedsConfirm = false;   // server asked before spending credits on a probably-fruitless search
+
+  function clearReview() {
+    rvProposals = []; rvMaxFeeds = 12; rvNeedsConfirm = false;
+    const b = $('rv-body'); if (b) b.innerHTML = '';
+    const s = $('rv-summary'); if (s) s.textContent = '';
+    const a = $('rv-applybar'); if (a) a.style.display = 'none';
+    const m = $('rv-more'); if (m) m.style.display = 'none';
+    const st = $('rv-status'); if (st) st.textContent = '';
+  }
+  function collectResultPicks() {
+    const picks = [];
+    ORDER.forEach(id => { const t = $(`bet-${id}`).value.trim(); if (t) picks.push({ id, kind: 'player', text: t }); });
+    if (monkeyState) monkeyState.picks.forEach((p, i) => picks.push({ id: 'monkey:' + i, kind: 'monkey', text: p.pick, league: p.league }));
+    return picks;
+  }
+  function currentResultOf(p) {
+    if (p.kind === 'monkey') { const mp = monkeyState && monkeyState.picks[parseInt(p.id.split(':')[1], 10)]; return mp ? (mp.result || 'pending') : 'pending'; }
+    const el = $(`res-${p.id}`); return el ? el.value : 'pending';
+  }
+  function whoLabel(p) {
+    if (p.kind === 'monkey') return '🐒 Monkey #' + (parseInt(p.id.split(':')[1], 10) + 1);
+    const pl = DATA.players[p.id]; return pl ? pl.name : p.id;
+  }
+  const RV_LABEL = { pending: 'Not finished', ambiguous: 'Ambiguous', notfound: 'Not found', manual: 'Manual' };
+
+  function renderReview(j) {
+    rvProposals = j.proposals;
+    const n = s => rvProposals.filter(p => p.status === s).length;
+    const need = n('ambiguous') + n('notfound') + n('manual');
+    $('rv-summary').innerHTML = `<b>${n('settled')}</b> settled · ${n('pending')} not finished · ${need} need you`
+      + ` · searched ${j.searched.length} league(s), <b>${j.creditsUsed}</b> credit(s) used${j.remaining != null ? ' (' + esc(j.remaining) + ' left)' : ''}`
+      + (j.notes || []).map(t => `<div class="rv-note">ℹ️ ${esc(t)}</div>`).join('')
+      + (j.feedErrors || []).map(f => `<div class="rv-note">⚠️ ${esc(f.key)}: ${esc(f.error)}</div>`).join('');
+    $('rv-body').innerHTML = rvProposals.map((p, i) => {
+      const cur = currentResultOf(p);
+      const isSettled = p.status === 'settled';
+      const differs = isSettled && cur !== 'pending' && cur !== p.result;
+      const checked = isSettled && !differs && cur === 'pending';
+      const cls = isSettled ? 'settled-' + p.result : p.status;
+      const label = isSettled ? p.result : RV_LABEL[p.status];
+      const conf = isSettled ? `<small>${esc(p.confidence)} confidence${cur !== 'pending' ? ' · now ' + esc(cur) : ''}</small>` : '';
+      let detail;
+      if (isSettled && p.match) detail = `<b>${esc(p.match.home)} ${p.match.homeScore}–${p.match.awayScore} ${esc(p.match.away)}</b> · ${esc(p.match.league)}` + (differs ? ` <span style="color:var(--draw)">(currently set to ${esc(cur)} — untick to keep)</span>` : '');
+      else detail = esc(p.reason || '') + (p.match ? ` (${esc(p.match.home)} v ${esc(p.match.away)})` : '');
+      return `<div class="rvrow">
+        <input type="checkbox" id="rv-ck-${i}"${checked ? ' checked' : ''}${isSettled ? '' : ' disabled'}>
+        <div class="rv-who">${esc(whoLabel(p))}</div>
+        <div class="rv-pick">${esc(p.text)}</div>
+        <div class="rv-prop ${cls}">${esc(label)}${conf}</div>
+        <div class="rv-match">${detail}</div></div>`;
+    }).join('');
+    const settledCount = n('settled');
+    $('rv-applybar').style.display = settledCount ? '' : 'none';
+    $('rv-applyhint').textContent = settledCount ? 'Ticked rows fill the result dropdowns above. Then check them and Save.' : '';
+    rvNeedsConfirm = !!j.needsConfirm;
+    const wantMore = j.searched.length >= rvMaxFeeds || (j.notes || []).some(t => /Stopped after/.test(t));
+    const more = $('rv-more');
+    if (rvNeedsConfirm) { more.textContent = `🔎 Search anyway (up to ${j.confirmMaxCredits} credits)`; more.style.display = ''; }
+    else { more.textContent = '🔎 Search more leagues'; more.style.display = (wantMore && rvMaxFeeds < 40 && (n('notfound') > 0 || n('ambiguous') > 0)) ? '' : 'none'; }
+  }
+
+  async function fetchResults(maxFeeds, force) {
+    if (rvBusy) return;
+    const picks = collectResultPicks();
+    if (!picks.length) { toast('Enter some picks first — there is nothing to look up', false, 4000); return; }
+    const date = $('wk-date').value;
+    if (!date) { toast('Set the week’s Date first — it tells the tool which games to look for', false, 5000); return; }
+    rvBusy = true; rvMaxFeeds = maxFeeds || 12;
+    const fb = $('rv-fetch'), mb = $('rv-more');
+    fb.disabled = true; mb.disabled = true; fb.textContent = '⏳ searching…'; $('rv-status').textContent = 'searching…';
+    let r;
+    try {
+      r = await fetch('/api/settle', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date, picks, maxFeeds: rvMaxFeeds, allowFruitless: !!force }) });
+    } catch (e) {
+      toast('No local server running — start it with: node stats/admin/serve.js', false, 6000);
+      rvBusy = false; fb.disabled = false; mb.disabled = false; fb.textContent = '🏁 Fetch results'; $('rv-status').textContent = ''; return;
+    }
+    try {
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      renderReview(j);
+      $('rv-status').textContent = 'review below';
+    } catch (e) {
+      toast(e.message, false, Math.max(6000, e.message.length * 55));
+      $('rv-status').textContent = '';
+    } finally {
+      rvBusy = false; fb.disabled = false; mb.disabled = false; fb.textContent = '🏁 Fetch results';
+    }
+  }
+
+  function applyResults() {
+    let applied = 0, monkeyTouched = false;
+    rvProposals.forEach((p, i) => {
+      const ck = $('rv-ck-' + i);
+      if (!ck || !ck.checked || p.status !== 'settled') return;
+      if (p.kind === 'monkey') {
+        const idx = parseInt(p.id.split(':')[1], 10);
+        if (monkeyState && monkeyState.picks[idx]) { monkeyState.picks[idx].result = p.result; monkeyTouched = true; applied++; }
+      } else {
+        const el = $('res-' + p.id);
+        if (el) { el.value = p.result; paintResult(p.id, p.result); applied++; }
+      }
+    });
+    if (!applied) { toast('Nothing ticked — tick the results you want first', false, 3500); return; }
+    if (monkeyTouched) renderMonkey();
+    markDirty(); refreshPreview();
+    toast(`Applied ${applied} result${applied === 1 ? '' : 's'} — check them, then Save`, true, 5000);
   }
 
   // ---- Week selector --------------------------------------------------------
@@ -349,7 +504,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     $('btn-delete').style.display = 'none';
     loadedNote = null;
     if (mkTeamEl) mkTeamEl.value = '';
-    monkeyState = null; renderMonkey();
+    monkeyState = null; renderMonkey(); clearReview();
   }
   let loadedNote = null;
   function loadWeek(n) {
@@ -375,7 +530,7 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
       seed: w.monkey.seed, poolSize: w.monkey.poolSize, expectedReturn: Number(w.monkey.expectedReturn) || 0,
       picks: (w.monkey.picks || []).map(p => ({ pick: p.pick, odds: Number(p.odds), result: p.result || 'pending', league: p.league || '', backup: !!p.backup })),
     } : null;
-    renderMonkey();
+    renderMonkey(); clearReview();
   }
   sel.addEventListener('change', () => {
     if (sel.value === '__new') loadNew(); else loadWeek(+sel.value);
@@ -628,6 +783,9 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
   $('btn-copy').addEventListener('click', () => { applyWeek(); copy(); });
   $('btn-delete').addEventListener('click', deleteWeek);
   $('mk-generate').addEventListener('click', generateMonkey);
+  $('rv-fetch').addEventListener('click', () => fetchResults(12));
+  $('rv-more').addEventListener('click', () => rvNeedsConfirm ? fetchResults(rvMaxFeeds, true) : fetchResults(Math.min(rvMaxFeeds + 12, 40)));
+  $('rv-apply').addEventListener('click', applyResults);
   [ 'wk-num','wk-date','wk-highlight','er-'+TEAMS[0].id,'er-'+TEAMS[1].id ].forEach(id => $(id).addEventListener('input', markDirty));
   playersEl.addEventListener('input', markDirty);
   window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
