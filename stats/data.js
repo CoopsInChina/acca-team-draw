@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 6 · 2026-09-18",
+  updated: "Week 5 · 2026-09-18",
 
   highlight: "AZ screwed Coops and Monkety in a thressome no one wants to imagine. \n\nNiblett cant buy a win, just like spurs. \n\nSunshine Bus starting to get into 2nd Gear.......",
 
@@ -142,22 +142,32 @@ window.ACCA_DATA = {
         ],
       }
     },
-    { week: 5, date: "2026-09-18",
-      expectedReturn: { sunshine: 0, infantino: 0 },
+    { week: 5, date: "2026-09-18", monkeyTeam: "sunshine",
+      expectedReturn: { sunshine: 635.62, infantino: 56.7 },
       bets: {
-        roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        lincoln: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        lacey: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        tim: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        abby: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        garry: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        dewi: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        roger: { betOn: "Monaco to beat Lens", odds: 2.05, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Dortmund to beat Stuttgart", odds: 2.75, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Lyon to beat Rennes", odds: 2.05, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Aston Villa to beat Tottenham", odds: 3.5, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Nottm Forest to beat Coventry", odds: 1.57, ballsOfSteel: false, result: "loss" },
+        garry: { betOn: "Nottm Forest to beat Coventry", odds: 1.57, ballsOfSteel: true, result: "loss" },
+        dewi: { betOn: "Man City to beat Sunderland", odds: 1.29, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "IK Sirius to beat Örgryte", odds: 1.44, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "QPR to beat Preston", odds: 1.7, ballsOfSteel: false, result: "draw" },
+        niblett: { betOn: "Fenerbahce to beat Eyupspor", odds: 1.14, ballsOfSteel: false, result: "win" },
+      },
+      monkey: {
+        expectedReturn: 8.23, seed: "a9f6aab8", poolSize: 6,
+        picks: [
+          { pick: "Manchester City", odds: 1.29, result: "win", league: "Premier League" },
+          { pick: "AZ Alkmaar", odds: 1.24, result: "win", league: "Eredivisie" },
+          { pick: "AC Milan", odds: 1.25, result: "win", league: "Serie A" },
+          { pick: "Almería", odds: 1.35, result: "win", league: "La Liga 2" },
+          { pick: "Ajax", odds: 1.22, result: "draw", league: "Eredivisie" },
+        ],
       }
     },
-    { week: 6, date: "2026-09-18", monkeyTeam: "infantino",
+    { week: 6, date: "2026-09-24", monkeyTeam: "infantino",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -172,13 +182,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 8.23, seed: "a9f6aab8", poolSize: 6,
+        expectedReturn: 10.05, seed: "0de0a192", poolSize: 5,
         picks: [
-          { pick: "Manchester City", odds: 1.29, result: "pending", league: "Premier League" },
-          { pick: "AZ Alkmaar", odds: 1.24, result: "pending", league: "Eredivisie" },
-          { pick: "AC Milan", odds: 1.25, result: "pending", league: "Serie A" },
-          { pick: "Almería", odds: 1.35, result: "pending", league: "La Liga 2" },
-          { pick: "Ajax", odds: 1.22, result: "pending", league: "Eredivisie" },
+          { pick: "Iceland", odds: 1.28, result: "pending", league: "Nations League" },
+          { pick: "Stockport County FC", odds: 1.37, result: "pending", league: "League One" },
+          { pick: "Slovakia", odds: 1.24, result: "pending", league: "Nations League" },
+          { pick: "Germany", odds: 1.35, result: "pending", league: "Nations League" },
+          { pick: "Switzerland", odds: 1.37, result: "pending", league: "Nations League", backup: true },
         ],
       }
     },
