@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 5 · 2026-09-18",
 
-  highlight: "AZ screwed Coops and Monkety in a thressome no one wants to imagine. \n\nNiblett cant buy a win, just like spurs. \n\nSunshine Bus starting to get into 2nd Gear.......",
+  highlight: "The Biggest EVER guilt club entry see's Abby hang his head in shame for selecting the worlds worst premier league team after spurs.  Ironically, spursy records probably the most emphatic win ever.... \n\nSame team screwed coops again..... and monkey fell at the final hurdle.\n\nLooks like we all regroup again...",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
