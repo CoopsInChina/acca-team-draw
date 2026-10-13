@@ -7,9 +7,9 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 5 · 2026-09-18",
+  updated: "Week 9 · 2026-10-13",
 
-  highlight: "The Biggest EVER guilt club entry see's Abby hang his head in shame for selecting the worlds worst premier league team after spurs.  Ironically, spursy records probably the most emphatic win ever.... \n\nSame team screwed coops again..... and monkey fell at the final hurdle.\n\nLooks like we all regroup again...",
+  highlight: "Admin back from holiday. That slacker finally caught up. All the AI in the world and the prick is still late. \n\nLong bet crossed off for for one Garibaldi... the other still floundering. \n\nIn other news, tottenham scored. Thats nice.... bless them.",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
@@ -168,6 +168,71 @@ window.ACCA_DATA = {
       }
     },
     { week: 6, date: "2026-09-24", monkeyTeam: "infantino",
+      expectedReturn: { sunshine: 91.33, infantino: 60.19 },
+      bets: {
+        roger: { betOn: "Bristol Rovers to beat Exeter City", odds: 1.66, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Brazil to beat Australia", odds: 1.36, ballsOfSteel: false, result: "draw" },
+        lacey: { betOn: "Southend United to beat Barrow", odds: 1.65, ballsOfSteel: false, result: "loss" },
+        tim: { betOn: "Plymouth Argyle to beat Burton Albion", odds: 1.57, ballsOfSteel: false, result: "loss" },
+        abby: { betOn: "Boreham Wood to beat Solihull Moors", odds: 1.55, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "Boreham Wood to beat Solihull Moors", odds: 1.5, ballsOfSteel: false, result: "win" },
+        dewi: { betOn: "Austria to beat Israel", odds: 1.33, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Germany to beat Greece", odds: 1.25, ballsOfSteel: false, result: "loss" },
+        steve: { betOn: "Egypt to beat Angola", odds: 1.44, ballsOfSteel: false, result: "draw" },
+        niblett: { betOn: "Southend to beat Barrow", odds: 1.67, ballsOfSteel: false, result: "loss" },
+      },
+      monkey: {
+        expectedReturn: 10.05, seed: "0de0a192", poolSize: 5,
+        picks: [
+          { pick: "Iceland", odds: 1.28, result: "draw", league: "Nations League" },
+          { pick: "Stockport County FC", odds: 1.37, result: "win", league: "League One" },
+          { pick: "Slovakia", odds: 1.24, result: "win", league: "Nations League" },
+          { pick: "Germany", odds: 1.35, result: "loss", league: "Nations League" },
+          { pick: "Switzerland", odds: 1.37, result: "win", league: "Nations League", backup: true },
+        ],
+      }
+    },
+    { week: 7, date: "2026-10-01",
+      expectedReturn: { sunshine: 21.01, infantino: 21.01 },
+      bets: {
+        roger: { betOn: "Spain to beat Czechia", odds: 1.08, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Belarus to beat San Marino", odds: 1.11, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Boreham Wood to beat Altrincham", odds: 1.45, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Azerbaijan to beat Liechtenstein", odds: 1.13, ballsOfSteel: false, result: "draw" },
+        abby: { betOn: "Argentina to beat Bolivia", odds: 1.06, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "Belarus to beat San Marino", odds: 1.07, ballsOfSteel: false, result: "win" },
+        dewi: { betOn: "Germany to beat Serbia", odds: 1.17, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Paris Saint-Germain (W) to beat Oud-Heverlee Leuven (W)", odds: 1.13, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "Ebbsfleet United to beat Sholing", odds: 1.22, ballsOfSteel: false, result: "loss" },
+        niblett: { betOn: "Malta to beat Gibraltar", odds: 1.22, ballsOfSteel: false, result: "draw" },
+      }
+    },
+    { week: 8, date: "2026-10-08", monkeyTeam: "infantino",
+      expectedReturn: { sunshine: 41.15, infantino: 396.9 },
+      bets: {
+        roger: { betOn: "Inter Milan to beat Parma", odds: 1.14, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Manchester United to beat Tottenham", odds: 1.66, ballsOfSteel: true, result: "draw" },
+        lacey: { betOn: "PSV to beat Heerenveen", odds: 1.22, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Paris Saint-Germain to beat Le Mans", odds: 1.07, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "York City to beat Northampton Town", odds: 1.65, ballsOfSteel: false, result: "draw" },
+        garry: { betOn: "Nottingham Forest to beat Crystal Palace", odds: 2.63, ballsOfSteel: true, result: "loss" },
+        dewi: { betOn: "Arsenal to beat Leeds", odds: 1.33, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Lyon to beat Lens", odds: 2.7, ballsOfSteel: false, result: "loss" },
+        steve: { betOn: "FC Koln to beat Monchengladbach", odds: 2, ballsOfSteel: false, result: "win" },
+        niblett: { betOn: "Aberdeen to beat St Johnstone", odds: 2.1, ballsOfSteel: false, result: "loss" },
+      },
+      monkey: {
+        expectedReturn: 8.55, seed: "b8c95b36", poolSize: 6,
+        picks: [
+          { pick: "Ajax", odds: 1.29, result: "draw", league: "Eredivisie" },
+          { pick: "Arsenal", odds: 1.38, result: "win", league: "Premier League" },
+          { pick: "Inter Milan", odds: 1.13, result: "win", league: "Serie A" },
+          { pick: "Real Madrid", odds: 1.36, result: "win", league: "La Liga" },
+          { pick: "PSV Eindhoven", odds: 1.25, result: "win", league: "Eredivisie" },
+        ],
+      }
+    },
+    { week: 9, date: "2026-10-13", monkeyTeam: "sunshine",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -182,13 +247,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 10.05, seed: "0de0a192", poolSize: 5,
+        expectedReturn: 7.48, seed: "44f49d6c", poolSize: 7,
         picks: [
-          { pick: "Iceland", odds: 1.28, result: "pending", league: "Nations League" },
-          { pick: "Stockport County FC", odds: 1.37, result: "pending", league: "League One" },
-          { pick: "Slovakia", odds: 1.24, result: "pending", league: "Nations League" },
-          { pick: "Germany", odds: 1.35, result: "pending", league: "Nations League" },
-          { pick: "Switzerland", odds: 1.37, result: "pending", league: "Nations League", backup: true },
+          { pick: "Manchester City", odds: 1.21, result: "pending", league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.21, result: "pending", league: "Bundesliga" },
+          { pick: "Real Madrid", odds: 1.23, result: "pending", league: "La Liga" },
+          { pick: "Salford City", odds: 1.35, result: "pending", league: "League Two" },
+          { pick: "Stockport County FC", odds: 1.23, result: "pending", league: "League One" },
         ],
       }
     },
