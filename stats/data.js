@@ -235,7 +235,7 @@ window.ACCA_DATA = {
     { week: 9, date: "2026-10-13", monkeyTeam: "sunshine",
       expectedReturn: { sunshine: 40.15, infantino: 45.65 },
       bets: {
-        roger: { betOn: "Manchester City to beat Ipswich", odds: 1.22, ballsOfSteel: true, result: "win" },
+        roger: { betOn: "Manchester City to beat Ipswich", odds: 1.22, ballsOfSteel: false, result: "win" },
         lincoln: { betOn: "PSV to beat ADO Den Haag", odds: 1.25, ballsOfSteel: false, result: "loss" },
         lacey: { betOn: "Roma to beat Genoa", odds: 1.45, ballsOfSteel: false, result: "win" },
         tim: { betOn: "Stockport County to beat Bromley", odds: 1.25, ballsOfSteel: false, result: "win" },
