@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 11 · 2026-10-28",
 
-  highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror.....",
+  highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror..... including the ADMIN who once again fucked up and didnt sort the monkey bet....",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
@@ -272,7 +272,7 @@ window.ACCA_DATA = {
         niblett: { betOn: "Marseille to beat Le Havre", odds: 1.56, ballsOfSteel: false, result: "win" },
       }
     },
-    { week: 11, date: "2026-10-28",
+    { week: 11, date: "2026-10-28", monkeyTeam: "infantino",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -285,6 +285,16 @@ window.ACCA_DATA = {
         mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
         steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+      },
+      monkey: {
+        expectedReturn: 8.27, seed: "6284431c", poolSize: 7,
+        picks: [
+          { pick: "Barcelona", odds: 1.1, result: "pending", league: "La Liga" },
+          { pick: "Bayern Munich", odds: 1.33, result: "pending", league: "Bundesliga" },
+          { pick: "Real Betis", odds: 1.36, result: "pending", league: "La Liga" },
+          { pick: "Stockport County FC", odds: 1.25, result: "pending", league: "League One" },
+          { pick: "Como", odds: 1.33, result: "pending", league: "Serie A" },
+        ],
       }
     },
   ],
