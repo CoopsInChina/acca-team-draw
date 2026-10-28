@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 11 · 2026-10-28",
+  updated: "Week 10 · 2026-10-22",
 
   highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror..... including the ADMIN who once again fucked up and didnt sort the monkey bet....",
 
@@ -262,7 +262,7 @@ window.ACCA_DATA = {
       bets: {
         roger: { betOn: "Lazio to beat Parma", odds: 1.37, ballsOfSteel: false, result: "win" },
         lincoln: { betOn: "Cruzeiro to beat Remo", odds: 1.3, ballsOfSteel: false, result: "win" },
-        lacey: { betOn: "Newcastle to beat Crystal Palace", odds: 2.25, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Newcastle to beat Crystal Palace", odds: 2.25, ballsOfSteel: true, result: "win" },
         tim: { betOn: "Atletico Madrid to beat Deportivo", odds: 1.25, ballsOfSteel: false, result: "win" },
         abby: { betOn: "Huddersfield Town to beat Wigan", odds: 1.3, ballsOfSteel: false, result: "win" },
         garry: { betOn: "Inter to beat Fiorentina", odds: 1.35, ballsOfSteel: false, result: "win" },
