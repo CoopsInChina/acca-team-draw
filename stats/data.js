@@ -7,9 +7,9 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 9 · 2026-10-13",
+  updated: "Week 11 · 2026-10-28",
 
-  highlight: "Admin back from holiday. That slacker finally caught up. All the AI in the world and the prick is still late. \n\nLong bet crossed off for for one Garibaldi... the other still floundering. \n\nIn other news, tottenham scored. Thats nice.... bless them.",
+  highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror.....",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
@@ -233,6 +233,46 @@ window.ACCA_DATA = {
       }
     },
     { week: 9, date: "2026-10-13", monkeyTeam: "sunshine",
+      expectedReturn: { sunshine: 40.15, infantino: 45.65 },
+      bets: {
+        roger: { betOn: "Manchester City to beat Ipswich", odds: 1.22, ballsOfSteel: true, result: "win" },
+        lincoln: { betOn: "PSV to beat ADO Den Haag", odds: 1.25, ballsOfSteel: false, result: "loss" },
+        lacey: { betOn: "Roma to beat Genoa", odds: 1.45, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Stockport County to beat Bromley", odds: 1.25, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Boreham Wood to beat Woking", odds: 1.45, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "PSV to beat ADO Den Haag", odds: 1.2, ballsOfSteel: false, result: "loss" },
+        dewi: { betOn: "Brighton to beat Crystal Palace", odds: 1.5, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Paris Saint-Germain to beat Strasbourg", odds: 1.36, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "Panathinaikos to beat Asteras Tripolis", odds: 1.2, ballsOfSteel: false, result: "win" },
+        niblett: { betOn: "Roma to beat Genoa", odds: 1.55, ballsOfSteel: false, result: "win" },
+      },
+      monkey: {
+        expectedReturn: 7.48, seed: "44f49d6c", poolSize: 7,
+        picks: [
+          { pick: "Manchester City", odds: 1.21, result: "win", league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.21, result: "win", league: "Bundesliga" },
+          { pick: "Real Madrid", odds: 1.23, result: "win", league: "La Liga" },
+          { pick: "Salford City", odds: 1.35, result: "win", league: "League Two" },
+          { pick: "Stockport County FC", odds: 1.23, result: "win", league: "League One" },
+        ],
+      }
+    },
+    { week: 10, date: "2026-10-22",
+      expectedReturn: { sunshine: 65.35, infantino: 57.42 },
+      bets: {
+        roger: { betOn: "Lazio to beat Parma", odds: 1.37, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Cruzeiro to beat Remo", odds: 1.3, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Newcastle to beat Crystal Palace", odds: 2.25, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Atletico Madrid to beat Deportivo", odds: 1.25, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Huddersfield Town to beat Wigan", odds: 1.3, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "Inter to beat Fiorentina", odds: 1.35, ballsOfSteel: false, result: "win" },
+        dewi: { betOn: "Chelsea to beat Tottenham", odds: 1.73, ballsOfSteel: false, result: "loss" },
+        mikael: { betOn: "Atletico Madrid to beat Deportivo", odds: 1.27, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "Sporting Lisbon to beat Academico de Viseu", odds: 1.24, ballsOfSteel: false, result: "loss" },
+        niblett: { betOn: "Marseille to beat Le Havre", odds: 1.56, ballsOfSteel: false, result: "win" },
+      }
+    },
+    { week: 11, date: "2026-10-28",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -245,16 +285,6 @@ window.ACCA_DATA = {
         mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
         steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-      },
-      monkey: {
-        expectedReturn: 7.48, seed: "44f49d6c", poolSize: 7,
-        picks: [
-          { pick: "Manchester City", odds: 1.21, result: "pending", league: "Premier League" },
-          { pick: "Bayern Munich", odds: 1.21, result: "pending", league: "Bundesliga" },
-          { pick: "Real Madrid", odds: 1.23, result: "pending", league: "La Liga" },
-          { pick: "Salford City", odds: 1.35, result: "pending", league: "League Two" },
-          { pick: "Stockport County FC", odds: 1.23, result: "pending", league: "League One" },
-        ],
       }
     },
   ],
