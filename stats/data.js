@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 12 · 2026-11-02",
 
-  highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror..... including the ADMIN who once again fucked up and didnt sort the monkey bet....",
+  highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ?",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
