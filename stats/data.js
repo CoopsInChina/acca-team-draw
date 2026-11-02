@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 11 · 2026-10-28",
+  updated: "Week 12 · 2026-11-02",
 
   highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ?",
 
@@ -297,7 +297,7 @@ window.ACCA_DATA = {
         ],
       }
     },
-    { week: 12, date: "2026-11-02",
+    { week: 12, date: "2026-11-02", monkeyTeam: "sunshine",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
