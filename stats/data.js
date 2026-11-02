@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 12 · 2026-11-02",
+  updated: "Week 11 · 2026-10-28",
 
   highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ?",
 
@@ -272,7 +272,7 @@ window.ACCA_DATA = {
         niblett: { betOn: "Marseille to beat Le Havre", odds: 1.56, ballsOfSteel: false, result: "win" },
       }
     },
-    { week: 11, date: "2026-10-28", monkeyTeam: "infantino",
+    { week: 11, date: "2026-10-28",
       expectedReturn: { sunshine: 39.6, infantino: 36.55 },
       bets: {
         roger: { betOn: "Tottenham to beat Crystal Palace", odds: 1.53, ballsOfSteel: false, result: "win" },
