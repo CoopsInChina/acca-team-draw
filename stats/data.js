@@ -7,9 +7,9 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 12 · 2026-11-02",
+  updated: "Week 13 · 2026-11-02",
 
-  highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ?",
+  highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ? Rog leading the way like his faithful BHA. Classy.",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
@@ -320,6 +320,21 @@ window.ACCA_DATA = {
           { pick: "Real Madrid", odds: 1.28, result: "pending", league: "La Liga", backup: true },
           { pick: "PSV Eindhoven", odds: 1.33, result: "pending", league: "Eredivisie", backup: true },
         ],
+      }
+    },
+    { week: 13, date: "2026-11-02", monkeyTeam: "infantino",
+      expectedReturn: { sunshine: 0, infantino: 0 },
+      bets: {
+        roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        lincoln: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        lacey: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        tim: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        abby: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        garry: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        dewi: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       }
     },
   ],
