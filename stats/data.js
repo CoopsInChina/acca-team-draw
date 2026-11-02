@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 10 · 2026-10-22",
+  updated: "Week 12 · 2026-11-02",
 
   highlight: "Absolute Blinder from Lacey... and when i say blinder i genuinely mean he was blind to the fact it was happening. BOS, Long bet.... belter. \n\nSunshine Bus absolutely romping away with it. \n\nTeam infantino need a good hard look in the mirror..... including the ADMIN who once again fucked up and didnt sort the monkey bet....",
 
@@ -273,6 +273,31 @@ window.ACCA_DATA = {
       }
     },
     { week: 11, date: "2026-10-28", monkeyTeam: "infantino",
+      expectedReturn: { sunshine: 39.6, infantino: 36.55 },
+      bets: {
+        roger: { betOn: "Tottenham to beat Crystal Palace", odds: 1.53, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Paris Saint-Germain to beat Le Havre", odds: 1.25, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Hajduk Split to beat HNK Gorica", odds: 1.28, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Stockport County to beat AFC Wimbledon", odds: 1.25, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Boreham Wood to beat Hartlepool", odds: 1.28, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "Paris Saint-Germain to beat Le Havre", odds: 1.29, ballsOfSteel: false, result: "win" },
+        dewi: { betOn: "Porto to beat Estoril Praia", odds: 1.17, ballsOfSteel: false, result: "win" },
+        mikael: { betOn: "Djurgardens to beat Degerfors", odds: 1.25, ballsOfSteel: false, result: "win" },
+        steve: { betOn: "Eintracht Frankfurt to beat Hamburger SV", odds: 1.55, ballsOfSteel: true, result: "win" },
+        niblett: { betOn: "Middlesbrough to beat Charlton", odds: 1.25, ballsOfSteel: false, result: "win" },
+      },
+      monkey: {
+        expectedReturn: 8.27, seed: "6284431c", poolSize: 7,
+        picks: [
+          { pick: "Barcelona", odds: 1.1, result: "win", league: "La Liga" },
+          { pick: "Bayern Munich", odds: 1.33, result: "draw", league: "Bundesliga" },
+          { pick: "Real Betis", odds: 1.36, result: "win", league: "La Liga" },
+          { pick: "Stockport County FC", odds: 1.25, result: "win", league: "League One" },
+          { pick: "Como", odds: 1.33, result: "win", league: "Serie A" },
+        ],
+      }
+    },
+    { week: 12, date: "2026-11-02",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -287,13 +312,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 8.27, seed: "6284431c", poolSize: 7,
+        expectedReturn: 8.33, seed: "ad7364b7", poolSize: 5,
         picks: [
-          { pick: "Barcelona", odds: 1.1, result: "pending", league: "La Liga" },
-          { pick: "Bayern Munich", odds: 1.33, result: "pending", league: "Bundesliga" },
-          { pick: "Real Betis", odds: 1.36, result: "pending", league: "La Liga" },
-          { pick: "Stockport County FC", odds: 1.25, result: "pending", league: "League One" },
-          { pick: "Como", odds: 1.33, result: "pending", league: "Serie A" },
+          { pick: "Borussia Dortmund", odds: 1.28, result: "pending", league: "Bundesliga" },
+          { pick: "AS Roma", odds: 1.33, result: "pending", league: "Serie A" },
+          { pick: "Arsenal", odds: 1.15, result: "pending", league: "Premier League" },
+          { pick: "Real Madrid", odds: 1.28, result: "pending", league: "La Liga", backup: true },
+          { pick: "PSV Eindhoven", odds: 1.33, result: "pending", league: "Eredivisie", backup: true },
         ],
       }
     },
