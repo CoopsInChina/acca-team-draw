@@ -256,8 +256,14 @@ async function generate(opts = {}) {
     }
   }
 
+  // Teams the bookmaker won't take a bet on (e.g. "PSV is not available") can be excluded
+  // so a re-draw can't pick them again. Matches a team name case-insensitively, either
+  // as a whole name or contained in it ("PSV" excludes "PSV Eindhoven").
+  const excludeNames = (opts.exclude || []).map(x => String(x).trim().toLowerCase()).filter(Boolean);
+  const isExcluded = name => { const n = String(name).toLowerCase(); return excludeNames.some(x => n === x || n.includes(x) || x.includes(n)); };
+
   // Primary pool: home favourites only (the standard rule).
-  let pool = rawLeagues.flatMap(({ league, events }) => buildPool(events, league, win));
+  let pool = rawLeagues.flatMap(({ league, events }) => buildPool(events, league, win)).filter(c => !isExcluded(c.pick));
   pool.sort((a, b) => a.odds - b.odds);
   const homeFound = pool.length;
 
@@ -281,6 +287,8 @@ async function generate(opts = {}) {
         });
       });
     });
+    const awayOk = away.filter(c => !isExcluded(c.pick));
+    away.length = 0; awayOk.forEach(c => away.push(c));
     away.sort((a, b) => a.odds - b.odds);
     const needed = CONFIG.pick - pool.length;
     const topUp = away.slice(0, Math.max(needed, 0));
@@ -308,6 +316,7 @@ async function generate(opts = {}) {
     threshold: CONFIG.threshold,
     leagues: leaguesUsed,
     leagueErrors, skippedInactive,
+    excluded: excludeNames,
     homeFound, backupFound,          // how many of the qualifiers were home vs away-backup
     qualifyingFound: fullSize,      // total bankers found (before the 50 cap)
     poolSize: pool.length,          // recorded pool (<= 50)
@@ -321,12 +330,13 @@ async function generate(opts = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.includes('--help') || args.includes('-h')) {
-    console.log('Usage: node monkey.js [--mock] [--out file.json] [--seed hex]');
+    console.log('Usage: node monkey.js [--mock] [--out file.json] [--seed hex] [--exclude "Team A,Team B"]');
     process.exit(0);
   }
   const opts = { mock: args.includes('--mock') };
   const outIdx = args.indexOf('--out');   if (outIdx >= 0) opts.out = args[outIdx + 1];
   const seedIdx = args.indexOf('--seed'); if (seedIdx >= 0) opts.seed = args[seedIdx + 1];
+  const exIdx = args.indexOf('--exclude'); if (exIdx >= 0) opts.exclude = String(args[exIdx + 1] || '').split(',');
 
   generate(opts).then(result => {
     console.log(`\n  🐒 Monkey Magic — ${result.source}`);

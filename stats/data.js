@@ -312,13 +312,13 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 8.33, seed: "ad7364b7", poolSize: 5,
+        expectedReturn: 7.76, seed: "5f8c44bf", poolSize: 5,
         picks: [
-          { pick: "Borussia Dortmund", odds: 1.28, result: "pending", league: "Bundesliga" },
-          { pick: "AS Roma", odds: 1.33, result: "pending", league: "Serie A" },
-          { pick: "Arsenal", odds: 1.15, result: "pending", league: "Premier League" },
-          { pick: "Real Madrid", odds: 1.28, result: "pending", league: "La Liga", backup: true },
-          { pick: "PSV Eindhoven", odds: 1.33, result: "pending", league: "Eredivisie", backup: true },
+          { pick: "Real Madrid", odds: 1.26, result: "pending", league: "La Liga", backup: true },
+          { pick: "Arsenal", odds: 1.14, result: "pending", league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.25, result: "pending", league: "Bundesliga", backup: true },
+          { pick: "Borussia Dortmund", odds: 1.31, result: "pending", league: "Bundesliga" },
+          { pick: "AS Roma", odds: 1.32, result: "pending", league: "Serie A" },
         ],
       }
     },

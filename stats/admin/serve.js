@@ -194,7 +194,8 @@ const server = http.createServer((req, res) => {
   // ---- Monkey Magic: generate this week's banker picks --------------------
   if (req.method === 'GET' && req.url.split('?')[0] === '/api/monkey') {
     const params = new URLSearchParams((req.url.split('?')[1] || ''));
-    const opts = { seed: params.get('seed') || undefined, mock: params.get('mock') === '1' };
+    const opts = { seed: params.get('seed') || undefined, mock: params.get('mock') === '1',
+                   exclude: (params.get('exclude') || '').split(',').map(x => x.trim()).filter(Boolean).slice(0, 20) };
     require('./monkey.js').generate(opts)
       .then(result => {
         res.writeHead(200, { 'Content-Type': 'application/json' });

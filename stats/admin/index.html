@@ -503,7 +503,13 @@ details.preview textarea { margin-top:10px; min-height:280px; font-family:ui-mon
     ORDER.forEach(id => { $(`bet-${id}`).value=''; $(`odds-${id}`).value=''; $(`bos-${id}`).checked=false; const r=$(`res-${id}`); r.value='pending'; paintResult(id,'pending'); });
     $('btn-delete').style.display = 'none';
     loadedNote = null;
-    if (mkTeamEl) mkTeamEl.value = '';
+    // New week: default Monkey to ride with the OTHER team than the most recent assigned
+    // week (alternating Sunshine → Infantino → …). Only a default — change it in the dropdown.
+    if (mkTeamEl) {
+      const last = DATA.weeks.slice().sort((a, b) => b.week - a.week).find(w => w.monkeyTeam);
+      const li = last ? TEAMS.findIndex(t => t.id === last.monkeyTeam) : -1;
+      mkTeamEl.value = li >= 0 ? TEAMS[(li + 1) % TEAMS.length].id : '';
+    }
     monkeyState = null; renderMonkey(); clearReview();
   }
   let loadedNote = null;
