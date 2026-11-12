@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 13 · 2026-11-02",
+  updated: "Week 13 · 2026-11-12",
 
   highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ? Rog leading the way like his faithful BHA. Classy.",
 
@@ -298,6 +298,31 @@ window.ACCA_DATA = {
       }
     },
     { week: 12, date: "2026-11-02", monkeyTeam: "sunshine",
+      expectedReturn: { sunshine: 40.17, infantino: 67.76 },
+      bets: {
+        roger: { betOn: "Everton to beat Coventry City", odds: 1.66, ballsOfSteel: false, result: "win" },
+        lincoln: { betOn: "Real Madrid to beat Valencia", odds: 1.25, ballsOfSteel: false, result: "win" },
+        lacey: { betOn: "Borussia Dortmund to beat Elversberg", odds: 1.28, ballsOfSteel: false, result: "win" },
+        tim: { betOn: "Arsenal to beat Hull City", odds: 1.15, ballsOfSteel: false, result: "win" },
+        abby: { betOn: "Luton Town to beat Forest Green Rovers", odds: 1.3, ballsOfSteel: false, result: "win" },
+        garry: { betOn: "Man City to beat Nottingham Forest", odds: 1.67, ballsOfSteel: false, result: "loss" },
+        dewi: { betOn: "Club Brugge to beat Anderlecht", odds: 1.44, ballsOfSteel: false, result: "draw" },
+        mikael: { betOn: "Sirius to beat Kalmar FF", odds: 2.15, ballsOfSteel: false, result: "loss" },
+        steve: { betOn: "Paris Saint-Germain to beat Troyes", odds: 1.09, ballsOfSteel: false, result: "win" },
+        niblett: { betOn: "Plymouth Argyle to beat Alvechurch", odds: 1.2, ballsOfSteel: false, result: "win" },
+      },
+      monkey: {
+        expectedReturn: 7.76, seed: "5f8c44bf", poolSize: 5,
+        picks: [
+          { pick: "Real Madrid", odds: 1.26, result: "win", league: "La Liga", backup: true },
+          { pick: "Arsenal", odds: 1.14, result: "win", league: "Premier League" },
+          { pick: "Bayern Munich", odds: 1.25, result: "win", league: "Bundesliga", backup: true },
+          { pick: "Borussia Dortmund", odds: 1.31, result: "win", league: "Bundesliga" },
+          { pick: "AS Roma", odds: 1.32, result: "win", league: "Serie A" },
+        ],
+      }
+    },
+    { week: 13, date: "2026-11-12", monkeyTeam: "infantino",
       expectedReturn: { sunshine: 0, infantino: 0 },
       bets: {
         roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
@@ -312,29 +337,14 @@ window.ACCA_DATA = {
         niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       },
       monkey: {
-        expectedReturn: 7.76, seed: "5f8c44bf", poolSize: 5,
+        expectedReturn: 7.7, seed: "b552a078", poolSize: 6,
         picks: [
-          { pick: "Real Madrid", odds: 1.26, result: "pending", league: "La Liga", backup: true },
-          { pick: "Arsenal", odds: 1.14, result: "pending", league: "Premier League" },
-          { pick: "Bayern Munich", odds: 1.25, result: "pending", league: "Bundesliga", backup: true },
-          { pick: "Borussia Dortmund", odds: 1.31, result: "pending", league: "Bundesliga" },
-          { pick: "AS Roma", odds: 1.32, result: "pending", league: "Serie A" },
+          { pick: "Norway", odds: 1.22, result: "pending", league: "Nations League" },
+          { pick: "France", odds: 1.19, result: "pending", league: "Nations League" },
+          { pick: "Greece", odds: 1.33, result: "pending", league: "Nations League" },
+          { pick: "Scotland", odds: 1.19, result: "pending", league: "Nations League" },
+          { pick: "Slovakia", odds: 1.34, result: "pending", league: "Nations League" },
         ],
-      }
-    },
-    { week: 13, date: "2026-11-02", monkeyTeam: "infantino",
-      expectedReturn: { sunshine: 0, infantino: 0 },
-      bets: {
-        roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        lincoln: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        lacey: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        tim: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        abby: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        garry: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        dewi: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
-        niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
       }
     },
   ],
