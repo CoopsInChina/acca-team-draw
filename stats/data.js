@@ -9,7 +9,7 @@ window.ACCA_DATA = {
   season:  "2026/27",
   updated: "Week 13 · 2026-11-12",
 
-  highlight: "Boom! He humans finally get the better of the monkey, with a double whammy. \n\nTeam Infantino finding their feet, is this the start of the comeback trail ? Rog leading the way like his faithful BHA. Classy.",
+  highlight: "Team infantino falling part quicker than the Manchester Legacies..... \n\nSunshine bus driving away so far into the distance that there is going to need to be some serious speedbumps to help restore balance...",
 
   stakePerTeamPerWeek: 10,
   monkeyStakePerWeek:  2.5,
