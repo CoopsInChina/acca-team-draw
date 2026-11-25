@@ -7,7 +7,7 @@
 window.ACCA_DATA = {
 
   season:  "2026/27",
-  updated: "Week 14 · 2026-11-19",
+  updated: "Week 15 · 2026-11-25",
 
   highlight: "Is that the worst performance ever from Team infantino ? It might well be.",
 
@@ -369,6 +369,31 @@ window.ACCA_DATA = {
           { pick: "Juventus", odds: 1.34, result: "win", league: "Serie A" },
           { pick: "Barcelona", odds: 1.19, result: "draw", league: "La Liga" },
           { pick: "Feyenoord", odds: 1.18, result: "loss", league: "Eredivisie" },
+        ],
+      }
+    },
+    { week: 15, date: "2026-11-25", monkeyTeam: "infantino",
+      expectedReturn: { sunshine: 0, infantino: 0 },
+      bets: {
+        roger: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        lincoln: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        lacey: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        tim: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        abby: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        garry: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        dewi: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        mikael: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        steve: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+        niblett: { betOn: "", odds: 0, ballsOfSteel: false, result: "pending" },
+      },
+      monkey: {
+        expectedReturn: 9.27, seed: "6d000b8a", poolSize: 7,
+        picks: [
+          { pick: "Groningen", odds: 1.38, result: "pending", league: "Eredivisie" },
+          { pick: "Inter Milan", odds: 1.31, result: "pending", league: "Serie A" },
+          { pick: "Hertha Berlin", odds: 1.39, result: "pending", league: "2. Bundesliga" },
+          { pick: "PSV Eindhoven", odds: 1.23, result: "pending", league: "Eredivisie" },
+          { pick: "AS Roma", odds: 1.2, result: "pending", league: "Serie A" },
         ],
       }
     },
